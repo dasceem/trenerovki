@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🏋️ План Тренировок</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0a0a0a; color: #fff; line-height: 1.5;
+            min-height: 100vh; -webkit-overflow-scrolling: touch;
+        }
+        .header {
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            padding: 25px 15px; text-align: center; position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 4px 20px rgba(255,107,53,0.3);
+        }
+        .header h1 { font-size: 1.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
+        .header p { font-size: 0.85rem; opacity: 0.9; margin-top: 5px; }
+        .tabs {
+            display: flex; background: #1a1a1a; position: sticky; top: 85px; z-index: 99;
+            border-bottom: 1px solid #333;
+        }
+        .tab {
+            flex: 1; padding: 15px 5px; text-align: center; cursor: pointer; font-weight: 700;
+            font-size: 0.85rem; transition: all 0.3s; border-bottom: 3px solid transparent;
+            text-transform: uppercase; letter-spacing: 1px; user-select: none; -webkit-user-select: none;
+        }
+        .tab.active { color: #ff6b35; border-bottom-color: #ff6b35; background: rgba(255,107,53,0.1); }
+        .day-content { display: none; padding: 15px; animation: fadeIn 0.4s ease; }
+        .day-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .day-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 5px; display: flex; align-items: center; gap: 10px; }
+        .day-subtitle { color: #888; font-size: 0.9rem; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #333; }
+        .muscle-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+        .muscle-tag {
+            background: linear-gradient(135deg, #ff6b35, #f7931e); padding: 4px 12px;
+            border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .exercise-card { background: #1a1a1a; border-radius: 16px; margin-bottom: 15px; overflow: hidden; border: 1px solid #2a2a2a; }
+        .exercise-header {
+            padding: 15px; display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+        }
+        .exercise-header:active { background: rgba(255,107,53,0.05); }
+        .exercise-name { font-size: 1rem; font-weight: 700; flex: 1; pointer-events: none; }
+        .exercise-number {
+            background: #ff6b35; color: #fff; width: 28px; height: 28px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-weight: 800;
+            font-size: 0.8rem; margin-right: 12px; flex-shrink: 0; pointer-events: none;
+        }
+        .toggle-icon { font-size: 1.2rem; transition: transform 0.3s; color: #ff6b35; pointer-events: none; }
+        .toggle-icon.open { transform: rotate(180deg); }
+        .exercise-body { display: none; }
+        .exercise-body.open { display: block; }
+        .exercise-inner { padding: 0 15px 15px; }
+        .svg-container {
+            width: 100%; height: 220px; background: #0f0f0f; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; margin-bottom: 15px;
+            overflow: hidden; position: relative; border: 1px solid #222;
+        }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .info-box { background: #252525; padding: 12px; border-radius: 10px; text-align: center; }
+        .info-label { font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+        .info-value { font-size: 1.1rem; font-weight: 800; color: #ff6b35; }
+        .muscles-section { background: #252525; padding: 12px; border-radius: 10px; margin-bottom: 15px; }
+        .muscles-title { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .muscles-list { display: flex; flex-wrap: wrap; gap: 6px; }
+        .muscle-pill { background: #333; padding: 4px 10px; border-radius: 15px; font-size: 0.75rem; color: #ccc; }
+        .muscle-pill.primary { background: rgba(255,107,53,0.2); color: #ff6b35; border: 1px solid rgba(255,107,53,0.3); }
+        .instructions {
+            background: #1f1f1f; border-radius: 12px; padding: 15px; margin-bottom: 15px;
+            border-left: 3px solid #ff6b35;
+        }
+        .instructions-title { font-weight: 700; color: #ff6b35; margin-bottom: 10px; font-size: 0.9rem; }
+        .instructions-list { list-style: none; counter-reset: step; }
+        .instructions-list li {
+            padding: 8px 0 8px 30px; position: relative; font-size: 0.85rem; color: #ccc;
+            border-bottom: 1px solid #2a2a2a;
+        }
+        .instructions-list li:last-child { border-bottom: none; }
+        .instructions-list li::before {
+            counter-increment: step; content: counter(step);
+            position: absolute; left: 0; top: 8px;
+            background: #ff6b35; color: #fff; width: 20px; height: 20px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem; font-weight: 800;
+        }
+        .tips-box {
+            background: linear-gradient(135deg, rgba(255,107,53,0.1), rgba(247,147,30,0.1));
+            border: 1px solid rgba(255,107,53,0.2); border-radius: 12px; padding: 15px; margin-top: 20px;
+        }
+        .tips-title { font-weight: 700; color: #ff6b35; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .tips-list { list-style: none; font-size: 0.85rem; color: #bbb; }
+        .tips-list li { padding: 4px 0; padding-left: 20px; position: relative; }
+        .tips-list li::before { content: "▸"; position: absolute; left: 0; color: #ff6b35; }
+        .footer { text-align: center; padding: 30px 15px; color: #555; font-size: 0.8rem; }
+        .rest-day {
+            background: #1a1a1a; border-radius: 16px; padding: 30px; text-align: center;
+            margin: 15px; border: 1px solid #2a2a2a;
+        }
+        .rest-day .emoji { font-size: 3rem; margin-bottom: 15px; }
+        .rest-day h3 { font-size: 1.2rem; margin-bottom: 10px; }
+        .rest-day p { color: #888; font-size: 0.9rem; }
+        .difficulty-badge {
+            display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.65rem;
+            font-weight: 700; text-transform: uppercase; margin-left: 8px;
+        }
+        .difficulty-easy { background: rgba(76,175,80,0.2); color: #4caf50; }
+        .difficulty-medium { background: rgba(255,152,0,0.2); color: #ff9800; }
+        .difficulty-hard { background: rgba(244,67,54,0.2); color: #f44336; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏋️ План Тренировок</h1>
+        <p>3 дня в неделю | Сила и масса | Для подростков 17+</p>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" id="tab-A">День А</div>
+        <div class="tab" id="tab-B">День Б</div>
+        <div class="tab" id="tab-V">День В</div>
+    </div>
+<div id="day-A" class="day-content active">
+    <div style="padding: 0 15px;">
+        <div class="day-title">📅 День А — Понедельник</div>
+        <div class="day-subtitle">Спина + Бицепс + Пресс</div>
+        <div class="muscle-tags">
+            <span class="muscle-tag">Широчайшие</span>
+            <span class="muscle-tag">Ромбовидные</span>
+            <span class="muscle-tag">Трапеции</span>
+            <span class="muscle-tag">Бицепс</span>
+            <span class="muscle-tag">Пресс</span>
+        </div>
+    </div>
+<div class="exercise-card">
+    <div class="exercise-header" data-exercise="1">
+        <div style="display:flex;align-items:center;flex:1;">
+            <div class="exercise-number">1</div>
+            <div class="exercise-name">Подтягивания широким хватом<span class="difficulty-badge difficulty-hard">Сложное</span></div>
+        </div>
+        <span class="toggle-icon">▼</span>
+    </div>
+    <div class="exercise-body" id="ex-1">
+        <div class="exercise-inner">
+            <div class="svg-container"><svg viewBox="0 0 200 200" style="width:100%;height:100%;">
+        <rect width="200" height="200" fill="#0f0f0f"/>
+        <line x1="30" y1="32" x2="170" y2="32" stroke="#333" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="100" cy="60" r="10" fill="none" stroke="#ff6b35" stroke-width="3"/>
+        <line x1="100" y1="70" x2="100" y2="108" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="100" y1="82" x2="72" y2="38" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <line x1="100" y1="82" x2="128" y2="38" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="72" cy="38" r="3.5" fill="#ff6b35"/>
+        <circle cx="128" cy="38" r="3.5" fill="#ff6b35"/>
+        <line x1="100" y1="108" x2="80" y2="144" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="100" y1="108" x2="120" y2="144" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <circle cx="80" cy="144" r="4" fill="#ff6b35"/>
+        <circle cx="120" cy="144" r="4" fill="#ff6b35"/>
+        <line x1="80" y1="144" x2="74" y2="178" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="120" y1="144" x2="126" y2="178" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="74" y1="178" x2="64" y2="178" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="126" y1="178" x2="136" y2="178" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="100" y="195" text-anchor="middle" fill="#ff6b35" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">ПОДТЯГИВАНИЯ</text>
+    </svg></div>
+            <div class="info-grid">
+                <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">4</div></div>
+                <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">MAX</div></div>
+            </div>
+            <div class="muscles-section">
+                <div class="muscles-title">💪 Задействованные мышцы</div>
+                <div class="muscles-list"><span class="muscle-pill primary">Широчайшие (основные)</span><span class="muscle-pill primary">Ромбовидные</span><span class="muscle-pill">Бицепс</span><span class="muscle-pill">Задняя дельта</span><span class="muscle-pill">Предплечья</span><span class="muscle-pill">Корпус</span></div>
+            </div>
+            <div class="instructions">
+                <div class="instructions-title">📋 Техника выполнения</div>
+                <ol class="instructions-list"><li>Висните на перекладине, хват шире плеч, ладони от себя</li><li>На выдохе подтяните тело вверх, подбородок выше перекладины</li><li>Лопатки сведите вместе в верхней точке, грудь вперёд</li><li>На вдохе медленно опуститесь вниз до полного вывиса</li><li>Контролируйте движение, не раскачивайтесь корпусом</li></ol>
+            </div>
+            <div class="tips-box" style="margin-top:10px;">
+            <div class="tips-title">💡 Ключевые моменты</div>
+            <ul class="tips-list"><li>Полная амплитуда — ключ к росту широчайших</li><li>Если не получается — используйте резинку или тренажёр с помощью</li></ul>
+        </div>
+        </div>
+    </div>
+</div><div class="exercise-card">
+    <div class="exercise-header" data-exercise="2">
+        <div style="display:flex;align-items:center;flex:1;">
+            <div class="exercise-number">2</div>
+            <div class="exercise-name">Тяга гантелей в наклоне<span class="difficulty-badge difficulty-medium">Среднее</span></div>
+        </div>
+        <span class="toggle-icon">▼</span>
+    </div>
+    <div class="exercise-body" id="ex-2">
+        <div class="exercise-inner">
+            <div class="svg-container"><svg viewBox="0 0 200 200" style="width:100%;height:100%;">
+        <rect width="200" height="200" fill="#0f0f0f"/>
+        <circle cx="100" cy="58" r="10" fill="none" stroke="#ff6b35" stroke-width="3"/>
+        <line x1="100" y1="68" x2="100" y2="106" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="100" y1="80" x2="65" y2="95" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <line x1="100" y1="80" x2="135" y2="95" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="65" cy="95" r="3.5" fill="#ff6b35"/>
+        <circle cx="135" cy="95" r="3.5" fill="#ff6b35"/>
+        <line x1="65" y1="95" x2="65" y2="115" stroke="#ff6b35" stroke-width="4" stroke-linecap="round"/>
+        <rect x="61" y="113" width="8" height="8" rx="2" fill="#f7931e"/>
+        <line x1="135" y1="95" x2="135" y2="115" stroke="#ff6b35" stroke-width="4" stroke-linecap="round"/>
+        <rect x="131" y="113" width="8" height="8" rx="2" fill="#f7931e"/>
+        <line x1="100" y1="106" x2="82" y2="146" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="100" y1="106" x2="118" y2="146" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <circle cx="82" cy="146" r="4" fill="#ff6b35"/>
+        <circle cx="118" cy="146" r="4" fill="#ff6b35"/>
+        <line x1="82" y1="146" x2="76" y2="178" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="118" y1="146" x2="124" y2="178" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="76" y1="178" x2="66" y2="178" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="124" y1="178" x2="134" y2="178" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="100" y="195" text-anchor="middle" fill="#ff6b35" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">ТЯГА ГАНТЕЛЕЙ В НАКЛОНЕ</text>
+    </svg></div>
+            <div class="info-grid">
+                <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">4</div></div>
+                <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">10-12</div></div>
+            </div>
+            <div class="muscles-section">
+                <div class="muscles-title">💪 Задействованные мышцы</div>
+                <div class="muscles-list"><span class="muscle-pill primary">Широчайшие</span><span class="muscle-pill primary">Ромбовидные</span><span class="muscle-pill primary">Средняя трапеция</span><span class="muscle-pill">Задняя дельта</span><span class="muscle-pill">Бицепс</span><span class="muscle-pill">Разгибатели спины</span><span class="muscle-pill">Предплечья</span></div>
+            </div>
+            <div class="instructions">
+                <div class="instructions-title">📋 Техника выполнения</div>
+                <ol class="instructions-list"><li>Встаньте, ноги на ширине плеч, гантели в руках прямым хватом</li><li>Наклонитесь корпусом вперёд на 45°, спина прямая, чуть согните колени</li><li>Тяните гантели к поясу, локти ведите вдоль корпуса вверх</li><li>В верхней точке сведите лопатки, задержитесь на 1 секунду</li><li>Медленно опустите гантели вниз, растягивая мышцы спины</li></ol>
+            </div>
+            <div class="tips-box" style="margin-top:10px;">
+            <div class="tips-title">💡 Ключевые моменты</div>
+            <ul class="tips-list"><li>Не округляйте спину — это травмоопасно</li><li>Тяните локтями, а не руками — так больше работает спина</li></ul>
+        </div>
+        </div>
+    </div>
+</div><div class="exercise-card">
+    <div class="exercise-header" data-exercise="3">
+        <div style="display:flex;align-items:center;flex:1;">
+            <div class="exercise-number">3</div>
+            <div class="exercise-name">Тяга гантели одной рукой<span class="difficulty-badge difficulty-medium">Среднее</span></div>
+        </div>
+        <span class="toggle-icon">▼</span>
+    </div>
+    <div class="exercise-body" id="ex-3">
+        <div class="exercise-inner">
+            <div class="svg-container"><svg viewBox="0 0 200 200" style="width:100%;height:100%;">
+        <rect width="200" height="200" fill="#0f0f0f"/>
+        <circle cx="95" cy="55" r="10" fill="none" stroke="#ff6b35" stroke-width="3"/>
+        <line x1="95" y1="65" x2="95" y2="105" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="95" y1="78" x2="68" y2="92" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <line x1="95" y1="78" x2="122" y2="65" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="68" cy="92" r="3.5" fill="#ff6b35"/>
+        <circle cx="122" cy="65" r="3.5" fill="#ff6b35"/>
+        <line x1="68" y1="92" x2="68" y2="112" stroke="#ff6b35" stroke-width="4" stroke-linecap="round"/>
+        <rect x="64" y="110" width="8" height="8" rx="2" fill="#f7931e"/>
+        <line x1="95" y1="105" x2="82" y2="148" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="95" y1="105" x2="108" y2="148" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <circle cx="82" cy="148" r="4" fill="#ff6b35"/>
+        <circle cx="108" cy="148" r="4" fill="#ff6b35"/>
+        <line x1="82" y1="148" x2="76" y2="178" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="108" y1="148" x2="114" y2="178" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="76" y1="178" x2="68" y2="178" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="114" y1="178" x2="122" y2="178" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="100" y="195" text-anchor="middle" fill="#ff6b35" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">ТЯГА ГАНТЕЛИ ОДНОЙ РУКОЙ</text>
+    </svg></div>
+            <div class="info-grid">
+                <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">3</div></div>
+                <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">12</div></div>
+            </div>
+            <div class="muscles-section">
+                <div class="muscles-title">💪 Задействованные мышцы</div>
+                <div class="muscles-list"><span class="muscle-pill primary">Широчайшие</span><span class="muscle-pill primary">Ромбовидные</span><span class="muscle-pill">Трапеции</span><span class="muscle-pill">Бицепс</span><span class="muscle-pill">Предплечья</span><span class="muscle-pill">Корпус</span></div>
+            </div>
+            <div class="instructions">
+                <div class="instructions-title">📋 Техника выполнения</div>
+                <ol class="instructions-list"><li>Встаньте в выпад, одной рукой упритесь в скамью, другая — с гантелью</li><li>Спина параллельна полу, корпус зафиксирован, смотрите в пол</li><li>Тяните гантель к поясу, локоть идёт вверх вдоль корпуса</li><li>В верхней точке максимально сведите лопатку</li><li>Медленно опустите гантель вниз до полного растяжения</li></ol>
+            </div>
+            <div class="tips-box" style="margin-top:10px;">
+            <div class="tips-title">💡 Ключевые моменты</div>
+            <ul class="tips-list"><li>Не поворачивайте корпус — работает только одна сторона</li><li>Чередуйте руки: сначала все подходы на одну, потом на другую</li></ul>
+        </div>
+        </div>
+    </div>
+</div><div class="exercise-card">
+    <div class="exercise-header" data-exercise="4">
+        <div style="display:flex;align-items:center;flex:1;">
+            <div class="exercise-number">4</div>
+            <div class="exercise-name">Сгибание гантелей на бицепс<span class="difficulty-badge difficulty-medium">Среднее</span></div>
+        </div>
+        <span class="toggle-icon">▼</span>
+    </div>
+    <div class="exercise-body" id="ex-4">
+        <div class="exercise-inner">
+            <div class="svg-container"><svg viewBox="0 0 200 200" style="width:100%;height:100%;">
+        <rect width="200" height="200" fill="#0f0f0f"/>
+        <circle cx="100" cy="52" r="10" fill="none" stroke="#ff6b35" stroke-width="3"/>
+        <line x1="100" y1="62" x2="100" y2="100" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="100" y1="74" x2="72" y2="58" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <line x1="100" y1="74" x2="128" y2="58" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="72" cy="58" r="3.5" fill="#ff6b35"/>
+        <circle cx="128" cy="58" r="3.5" fill="#ff6b35"/>
+        <line x1="72" y1="58" x2="72" y2="38" stroke="#ff6b35" stroke-width="4" stroke-linecap="round"/>
+        <rect x="68" y="30" width="8" height="8" rx="2" fill="#f7931e"/>
+        <line x1="128" y1="58" x2="128" y2="38" stroke="#ff6b35" stroke-width="4" stroke-linecap="round"/>
+        <rect x="124" y="30" width="8" height="8" rx="2" fill="#f7931e"/>
+        <line x1="100" y1="100" x2="100" y2="138" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="100" y1="100" x2="72" y2="118" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <line x1="100" y1="100" x2="128" y2="118" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="72" cy="118" r="3.5" fill="#ff6b35"/>
+        <circle cx="128" cy="118" r="3.5" fill="#ff6b35"/>
+        <line x1="100" y1="138" x2="86" y2="172" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="100" y1="138" x2="114" y2="172" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="86" y1="172" x2="78" y2="172" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="114" y1="172" x2="122" y2="172" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="100" y="195" text-anchor="middle" fill="#ff6b35" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">СГИБАНИЕ ГАНТЕЛЕЙ</text>
+    </svg></div>
+            <div class="info-grid">
+                <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">4</div></div>
+                <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">10-12</div></div>
+            </div>
+            <div class="muscles-section">
+                <div class="muscles-title">💪 Задействованные мышцы</div>
+                <div class="muscles-list"><span class="muscle-pill primary">Бицепс (двуглавая)</span><span class="muscle-pill">Брахиалис</span><span class="muscle-pill">Предплечья</span><span class="muscle-pill">Передняя дельта</span></div>
+            </div>
+            <div class="instructions">
+                <div class="instructions-title">📋 Техника выполнения</div>
+                <ol class="instructions-list"><li>Встаньте прямо, гантели в руках, ладони от себя, руки вдоль корпуса</li><li>Прижмите локти к корпусу и не отводите их во время движения</li><li>На выдохе сгибайте руки, поднимая гантели к плечам</li><li>В верхней точке сожмите бицепс на 1-2 секунды</li><li>На вдохе медленно опустите гантели, контролируя негативную фазу</li></ol>
+            </div>
+            <div class="tips-box" style="margin-top:10px;">
+            <div class="tips-title">💡 Ключевые моменты</div>
+            <ul class="tips-list"><li>Не раскачивайте корпус — читинг исключает бицепс из работы</li><li>Полное опускание = полное растяжение бицепса</li></ul>
+        </div>
+        </div>
+    </div>
+</div><div class="exercise-card">
+    <div class="exercise-header" data-exercise="5">
+        <div style="display:flex;align-items:center;flex:1;">
+            <div class="exercise-number">5</div>
+            <div class="exercise-name">Молотки с гантелями<span class="difficulty-badge difficulty-easy">Лёгкое</span></div>
+        </div>
+        <span class="toggle-icon">▼</span>
+    </div>
+    <div class="exercise-body" id="ex-5">
+        <div class="exercise-inner">
+            <div class="svg-container"><svg viewBox="0 0 200 200" style="width:100%;height:100%;">
+        <rect width="200" height="200" fill="#0f0f0f"/>
+        <circle cx="100" cy="52" r="10" fill="none" stroke="#ff6b35" stroke-width="3"/>
+        <line x1="100" y1="62" x2="100" y2="100" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="100" y1="74" x2="72" y2="62" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <line x1="100" y1="74" x2="128" y2="62" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="72" cy="62" r="3.5" fill="#ff6b35"/>
+        <circle cx="128" cy="62" r="3.5" fill="#ff6b35"/>
+        <line x1="72" y1="62" x2="72" y2="42" stroke="#ff6b35" stroke-width="4" stroke-linecap="round"/>
+        <rect x="68" y="36" width="8" height="10" rx="2" fill="#f7931e"/>
+        <line x1="128" y1="62" x2="128" y2="42" stroke="#ff6b35" stroke-width="4" stroke-linecap="round"/>
+        <rect x="124" y="36" width="8" height="10" rx="2" fill="#f7931e"/>
+        <line x1="100" y1="100" x2="100" y2="138" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="100" y1="100" x2="72" y2="118" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <line x1="100" y1="100" x2="128" y2="118" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="72" cy="118" r="3.5" fill="#ff6b35"/>
+        <circle cx="128" cy="118" r="3.5" fill="#ff6b35"/>
+        <line x1="100" y1="138" x2="86" y2="172" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="100" y1="138" x2="114" y2="172" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="86" y1="172" x2="78" y2="172" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="114" y1="172" x2="122" y2="172" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="100" y="195" text-anchor="middle" fill="#ff6b35" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">МОЛОТКИ С ГАНТЕЛЯМИ</text>
+    </svg></div>
+            <div class="info-grid">
+                <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">3</div></div>
+                <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">12</div></div>
+            </div>
+            <div class="muscles-section">
+                <div class="muscles-title">💪 Задействованные мышцы</div>
+                <div class="muscles-list"><span class="muscle-pill primary">Брахиалис</span><span class="muscle-pill primary">Бицепс</span><span class="muscle-pill">Предплечья</span><span class="muscle-pill">Плечелучевая</span></div>
+            </div>
+            <div class="instructions">
+                <div class="instructions-title">📋 Техника выполнения</div>
+                <ol class="instructions-list"><li>Встаньте прямо, гантели в руках, ладони повернуты друг к другу (нейтральный хват)</li><li>Прижмите локти к корпусу, плечи неподвижны</li><li>На выдохе поднимайте гантели к плечам, сохраняя нейтральный хват</li><li>В верхней точке задержитесь и сожмите мышцы</li><li>Медленно опустите гантели вниз до полного выпрямления рук</li></ol>
+            </div>
+            <div class="tips-box" style="margin-top:10px;">
+            <div class="tips-title">💡 Ключевые моменты</div>
+            <ul class="tips-list"><li>Нейтральный хват лучше нагружает брахиалис и предплечья</li><li>Движение похоже на удары молотком — отсюда название</li></ul>
+        </div>
+        </div>
+    </div>
+</div><div class="exercise-card">
+    <div class="exercise-header" data-exercise="6">
+        <div style="display:flex;align-items:center;flex:1;">
+            <div class="exercise-number">6</div>
+            <div class="exercise-name">Планка<span class="difficulty-badge difficulty-medium">Среднее</span></div>
+        </div>
+        <span class="toggle-icon">▼</span>
+    </div>
+    <div class="exercise-body" id="ex-6">
+        <div class="exercise-inner">
+            <div class="svg-container"><svg viewBox="0 0 200 200" style="width:100%;height:100%;">
+        <rect width="200" height="200" fill="#0f0f0f"/>
+        <circle cx="70" cy="88" r="10" fill="none" stroke="#ff6b35" stroke-width="3"/>
+        <line x1="70" y1="98" x2="110" y2="98" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="70" y1="98" x2="52" y2="118" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <line x1="110" y1="98" x2="128" y2="118" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="52" cy="118" r="3.5" fill="#ff6b35"/>
+        <circle cx="128" cy="118" r="3.5" fill="#ff6b35"/>
+        <line x1="52" y1="118" x2="52" y2="138" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="128" y1="118" x2="128" y2="138" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="110" y1="98" x2="150" y2="98" stroke="#ff6b35" stroke-width="3" stroke-linecap="round"/>
+        <line x1="150" y1="98" x2="150" y2="118" stroke="#ff6b35" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="150" cy="118" r="3.5" fill="#ff6b35"/>
+        <line x1="52" y1="138" x2="42" y2="138" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="128" y1="138" x2="138" y2="138" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="150" y1="118" x2="150" y2="138" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="150" y1="138" x2="160" y2="138" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="100" y="168" text-anchor="middle" fill="#ff6b35" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">ПЛАНКА</text>
+    </svg></div>
+            <div class="info-grid">
+                <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">3</div></div>
+                <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">45-60 сек</div></div>
+            </div>
+            <div class="muscles-section">
+                <div class="muscles-title">💪 Задействованные мышцы</div>
+                <div class="muscles-list"><span class="muscle-pill primary">Прямая мышца живота</span><span class="muscle-pill primary">Косые мышцы</span><span class="muscle-pill">Поперечная мышца</span><span class="muscle-pill">Разгибатели спины</span><span class="muscle-pill">Ягодицы</span><span class="muscle-pill">Квадрицепс</span></div>
+            </div>
+            <div class="instructions">
+                <div class="instructions-title">📋 Техника выполнения</div>
+                <ol class="instructions-list"><li>Примите упор лёжа на предплечья, локти под плечевыми суставами</li><li>Тело образует прямую линию от головы до пяток — не провисайте поясницей</li><li>Напрягите пресс и ягодицы, живот втянут</li><li>Дышите ровно, не задерживайте дыхание</li><li>Удерживайте позицию заданное время, не опуская бёдра</li></ol>
+            </div>
+            <div class="tips-box" style="margin-top:10px;">
+            <div class="tips-title">💡 Ключевые моменты</div>
+            <ul class="tips-list"><li>Если поясница провисает — опустите колени, но сохраните прямую спину</li><li>Время удержания растите постепенно</li></ul>
+        </div>
+        </div>
+    </div>
+</div><div class="tips-box">
+    <div class="tips-title">💡 Советы дня А</div>
+    <ul class="tips-list">
+        <li>Начинайте с базовых многосуставных упражнений (подтягивания, тяга)</li>
+        <li>Бицепс — вспомогательная группа, не берите слишком тяжёлый вес</li>
+        <li>Между подходами отдыхайте 90-120 секунд</li>
+        <li>Планку делайте в конце тренировки как финишное упражнение</li>
+    </ul>
+</div></div><div id="day-B" class="day-content">
+    <div style="padding: 0 15px;">
+        <div class="day-title">📅 День Б — Среда</div>
+        <div class="day-subtitle">Грудь + Трицепс + Пресс</div>
+        <div class="muscle-tags">
+            <span class="muscle-tag">Грудные</span>
+            <span class="muscle-tag">Трицепс</span>
+            <span class="muscle-tag">Передняя дельта</span>
+            <span class="muscle-tag">Пресс</span>
+        </div>
+    </div>
+<div class="exercise-card">
+    <div class="exercise-header" data-exercise="7">
+        <div style="display:flex;align-items:center;flex:1;">
+            <div class="exercise-number">7</div>
+            <div class="exercise-name">Отжимания классические<span class="difficulty-badge difficulty-medium">Среднее</span></div>
+        </div>
+        <span class="toggle-icon">▼</span>
+    </div>
+    <div class="exercise-body" id="ex-7">
+        <div class="exercise-inner">
+            <div class="svg-container"><svg viewBox="0 0 200 200" style="width:100%;height:100%;">
+        <rect width="200" height="200" fill="#0f0f0f"/>
+        <circle cx="100" cy="75" r="10" fill="none" stroke="#ff6b35" stroke-width="3"/>
+        <line x1="100" y1="85" x2="100" y2="118" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="100" y1="96" x2="72" y2="112" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <line x1="100" y1="96" x2="128" y2="112" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="72" cy="112" r="3.5" fill="#ff6b35"/>
+        <circle cx="128" cy="112" r="3.5" fill="#ff6b35"/>
+        <line x1="72" y1="112" x2="72" y2="132" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="128" y1="112" x2="128" y2="132" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="100" y1="118" x2="82" y2="150" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="100" y1="118" x2="118" y2="150" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <circle cx="82" cy="150" r="4" fill="#ff6b35"/>
+        <circle cx="118" cy="150" r="4" fill="#ff6b35"/>
+        <line x1="82" y1="150" x2="74" y2="178" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="118" y1="150" x2="126" y2="178" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="74" y1="178" x2="66" y2="178" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="126" y1="178" x2="134" y2="178" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="100" y="195" text-anchor="middle" fill="#ff6b35" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">ОТЖИМАНИЯ</text>
+    </svg></div>
+            <div class="info-grid">
+                <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">4</div></div>
+                <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">MAX</div></div>
+            </div>
+            <div class="muscles-section">
+                <div class="muscles-title">💪 Задействованные мышцы</div>
+                <div class="muscles-list"><span class="muscle-pill primary">Грудные (средняя часть)</span><span class="muscle-pill primary">Трицепс</span><span class="muscle-pill">Передняя дельта</span><span class="muscle-pill">Корпус</span><span class="muscle-pill">Предплечья</span></div>
+            </div>
+            <div class="instructions">
+                <div class="instructions-title">📋 Техника выполнения</div>
+                <ol class="instructions-list"><li>Примите упор лёжа, руки на ширине плеч, тело — прямая линия</li><li>На вдохе опустите тело, сгибая локти примерно на 90°</li><li>Локти идут в стороны под углом ~45° к корпусу, не расползайте</li><li>На выдохе отожмитесь вверх до полного выпрямления рук</li><li>В верхней точке сведите лопатки и напрягите грудь</li></ol>
+            </div>
+            <div class="tips-box" style="margin-top:10px;">
+            <div class="tips-title">💡 Ключевые моменты</div>
+            <ul class="tips-list"><li>Если сложно — опустите колени, но сохраните прямую спину</li><li>Грудь почти касается пола — полная амплитуда</li></ul>
+        </div>
+        </div>
+    </div>
+</div><div class="exercise-card">
+    <div class="exercise-header" data-exercise="8">
+        <div style="display:flex;align-items:center;flex:1;">
+            <div class="exercise-number">8</div>
+            <div class="exercise-name">Жим гантелей лёжа<span class="difficulty-badge difficulty-hard">Сложное</span></div>
+        </div>
+        <span class="toggle-icon">▼</span>
+    </div>
+    <div class="exercise-body" id="ex-8">
+        <div class="exercise-inner">
+            <div class="svg-container"><svg viewBox="0 0 200 200" style="width:100%;height:100%;">
+        <rect width="200" height="200" fill="#0f0f0f"/>
+        <line x1="25" y1="152" x2="175" y2="152" stroke="#333" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="100" cy="118" r="10" fill="none" stroke="#ff6b35" stroke-width="3"/>
+        <line x1="100" y1="128" x2="100" y2="152" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="100" y1="136" x2="70" y2="116" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <line x1="100" y1="136" x2="130" y2="116" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="70" cy="116" r="3.5" fill="#ff6b35"/>
+        <circle cx="130" cy="116" r="3.5" fill="#ff6b35"/>
+        <line x1="70" y1="116" x2="70" y2="96" stroke="#ff6b35" stroke-width="4" stroke-linecap="round"/>
+        <rect x="66" y="88" width="8" height="8" rx="2" fill="#f7931e"/>
+        <line x1="130" y1="116" x2="130" y2="96" stroke="#ff6b35" stroke-width="4" stroke-linecap="round"/>
+        <rect x="126" y="88" width="8" height="8" rx="2" fill="#f7931e"/>
+        <line x1="100" y1="152" x2="86" y2="168" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="100" y1="152" x2="114" y2="168" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="86" y1="168" x2="78" y2="168" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="114" y1="168" x2="122" y2="168" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="100" y="195" text-anchor="middle" fill="#ff6b35" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">ЖИМ ГАНТЕЛЕЙ ЛЁЖА</text>
+    </svg></div>
+            <div class="info-grid">
+                <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">4</div></div>
+                <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">10-12</div></div>
+            </div>
+            <div class="muscles-section">
+                <div class="muscles-title">💪 Задействованные мышцы</div>
+                <div class="muscles-list"><span class="muscle-pill primary">Грудные (верх и середина)</span><span class="muscle-pill primary">Передняя дельта</span><span class="muscle-pill">Трицепс</span><span class="muscle-pill">Корпус</span><span class="muscle-pill">Предплечья</span></div>
+            </div>
+            <div class="instructions">
+                <div class="instructions-title">📋 Техника выполнения</div>
+                <ol class="instructions-list"><li>Лягте на скамью, гантели у груди, локти согнуты под ~75°</li><li>На выдохе выжмите гантели вверх, сводя их над грудной клеткой</li><li>В верхней точке гантели не сталкиваются — оставьте 5-10 см</li><li>На вдохе медленно опустите гантели, чувствуя растяжение груди</li><li>Локти не опускайте ниже уровня тела — это травмоопасно</li></ol>
+            </div>
+            <div class="tips-box" style="margin-top:10px;">
+            <div class="tips-title">💡 Ключевые моменты</div>
+            <ul class="tips-list"><li>Гантели дают большую амплитуду, чем штанга — используйте это</li><li>Следите, чтобы запястья оставались прямыми</li></ul>
+        </div>
+        </div>
+    </div>
+</div><div class="exercise-card">
+    <div class="exercise-header" data-exercise="9">
+        <div style="display:flex;align-items:center;flex:1;">
+            <div class="exercise-number">9</div>
+            <div class="exercise-name">Разведение гантелей лёжа<span class="difficulty-badge difficulty-medium">Среднее</span></div>
+        </div>
+        <span class="toggle-icon">▼</span>
+    </div>
+    <div class="exercise-body" id="ex-9">
+        <div class="exercise-inner">
+            <div class="svg-container"><svg viewBox="0 0 200 200" style="width:100%;height:100%;">
+        <rect width="200" height="200" fill="#0f0f0f"/>
+        <line x1="25" y1="152" x2="175" y2="152" stroke="#333" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="100" cy="118" r="10" fill="none" stroke="#ff6b35" stroke-width="3"/>
+        <line x1="100" y1="128" x2="100" y2="152" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="100" y1="136" x2="60" y2="124" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <line x1="100" y1="136" x2="140" y2="124" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="60" cy="124" r="3.5" fill="#ff6b35"/>
+        <circle cx="140" cy="124" r="3.5" fill="#ff6b35"/>
+        <line x1="60" y1="124" x2="60" y2="104" stroke="#ff6b35" stroke-width="4" stroke-linecap="round"/>
+        <rect x="56" y="96" width="8" height="8" rx="2" fill="#f7931e"/>
+        <line x1="140" y1="124" x2="140" y2="104" stroke="#ff6b35" stroke-width="4" stroke-linecap="round"/>
+        <rect x="136" y="96" width="8" height="8" rx="2" fill="#f7931e"/>
+        <line x1="100" y1="152" x2="86" y2="168" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="100" y1="152" x2="114" y2="168" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="86" y1="168" x2="78" y2="168" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="114" y1="168" x2="122" y2="168" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="100" y="195" text-anchor="middle" fill="#ff6b35" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">РАЗВЕДЕНИЕ ГАНТЕЛЕЙ</text>
+    </svg></div>
+            <div class="info-grid">
+                <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">3</div></div>
+                <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">12</div></div>
+            </div>
+            <div class="muscles-section">
+                <div class="muscles-title">💪 Задействованные мышцы</div>
+                <div class="muscles-list"><span class="muscle-pill primary">Грудные (наружные волокна)</span><span class="muscle-pill">Передняя дельта</span><span class="muscle-pill">Бицепс (стабилизация)</span></div>
+            </div>
+            <div class="instructions">
+                <div class="instructions-title">📋 Техника выполнения</div>
+                <ol class="instructions-list"><li>Лягте на скамью, гантели над грудью, ладони друг к другу</li><li>Слегка согните локти — они остаются в этом положении на всё движение</li><li>На вдохе медленно разведите руки в стороны, растягивая грудь</li><li>Опустите гантели до уровня груди, не ниже — чувствуйте растяжение</li><li>На выдохе сведите руки вверх, сжимая грудные мышцы</li></ol>
+            </div>
+            <div class="tips-box" style="margin-top:10px;">
+            <div class="tips-title">💡 Ключевые моменты</div>
+            <ul class="tips-list"><li>Это изолирующее упражнение — вес должен быть меньше, чем в жиме</li><li>Представьте, что обнимаете большое дерево — такая дуга движения</li></ul>
+        </div>
+        </div>
+    </div>
+</div><div class="exercise-card">
+    <div class="exercise-header" data-exercise="10">
+        <div style="display:flex;align-items:center;flex:1;">
+            <div class="exercise-number">10</div>
+            <div class="exercise-name">Отжимания узким хватом<span class="difficulty-badge difficulty-hard">Сложное</span></div>
+        </div>
+        <span class="toggle-icon">▼</span>
+    </div>
+    <div class="exercise-body" id="ex-10">
+        <div class="exercise-inner">
+            <div class="svg-container"><svg viewBox="0 0 200 200" style="width:100%;height:100%;">
+        <rect width="200" height="200" fill="#0f0f0f"/>
+        <circle cx="100" cy="75" r="10" fill="none" stroke="#ff6b35" stroke-width="3"/>
+        <line x1="100" y1="85" x2="100" y2="118" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="100" y1="96" x2="85" y2="112" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <line x1="100" y1="96" x2="115" y2="112" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="85" cy="112" r="3.5" fill="#ff6b35"/>
+        <circle cx="115" cy="112" r="3.5" fill="#ff6b35"/>
+        <line x1="85" y1="112" x2="85" y2="132" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="115" y1="112" x2="115" y2="132" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="100" y1="118" x2="82" y2="150" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="100" y1="118" x2="118" y2="150" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <circle cx="82" cy="150" r="4" fill="#ff6b35"/>
+        <circle cx="118" cy="150" r="4" fill="#ff6b35"/>
+        <line x1="82" y1="150" x2="74" y2="178" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="118" y1="150" x2="126" y2="178" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="74" y1="178" x2="66" y2="178" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="126" y1="178" x2="134" y2="178" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="100" y="195" text-anchor="middle" fill="#ff6b35" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">УЗКИЕ ОТЖИМАНИЯ</text>
+    </svg></div>
+            <div class="info-grid">
+                <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">3</div></div>
+                <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">10-12</div></div>
+            </div>
+            <div class="muscles-section">
+                <div class="muscles-title">💪 Задействованные мышцы</div>
+                <div class="muscles-list"><span class="muscle-pill primary">Трицепс (все 3 головки)</span><span class="muscle-pill">Грудь (внутренняя часть)</span><span class="muscle-pill">Передняя дельта</span><span class="muscle-pill">Корпус</span></div>
+            </div>
+            <div class="instructions">
+                <div class="instructions-title">📋 Техника выполнения</div>
+                <ol class="instructions-list"><li>Примите упор лёжа, руки под плечами или уже — на ширине 10-15 см</li><li>Локти прижаты к корпусу на всём протяжении движения</li><li>На вдохе опустите тело, сгибая локти — они идут назад, не в стороны</li><li>На выдохе отожмитесь, полностью выпрямляя руки и напрягая трицепс</li><li>Тело — прямая линия, не прогибайте поясницу и не поднимайте ягодицы</li></ol>
+            </div>
+            <div class="tips-box" style="margin-top:10px;">
+            <div class="tips-title">💡 Ключевые моменты</div>
+            <ul class="tips-list"><li>Чем уже хват — тем больше трицепс, но не ставьте руки совсем вместе (травмоопасно для запястий)</li><li>Если сложно — делайте с колен</li></ul>
+        </div>
+        </div>
+    </div>
+</div><div class="exercise-card">
+    <div class="exercise-header" data-exercise="11">
+        <div style="display:flex;align-items:center;flex:1;">
+            <div class="exercise-number">11</div>
+            <div class="exercise-name">Французский жим лёжа<span class="difficulty-badge difficulty-medium">Среднее</span></div>
+        </div>
+        <span class="toggle-icon">▼</span>
+    </div>
+    <div class="exercise-body" id="ex-11">
+        <div class="exercise-inner">
+            <div class="svg-container"><svg viewBox="0 0 200 200" style="width:100%;height:100%;">
+        <rect width="200" height="200" fill="#0f0f0f"/>
+        <line x1="25" y1="152" x2="175" y2="152" stroke="#333" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="100" cy="118" r="10" fill="none" stroke="#ff6b35" stroke-width="3"/>
+        <line x1="100" y1="128" x2="100" y2="152" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="100" y1="136" x2="100" y2="106" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="100" cy="106" r="3.5" fill="#ff6b35"/>
+        <line x1="100" y1="106" x2="82" y2="86" stroke="#ff6b35" stroke-width="4" stroke-linecap="round"/>
+        <rect x="78" y="78" width="8" height="8" rx="2" fill="#f7931e"/>
+        <line x1="100" y1="106" x2="118" y2="86" stroke="#ff6b35" stroke-width="4" stroke-linecap="round"/>
+        <rect x="114" y="78" width="8" height="8" rx="2" fill="#f7931e"/>
+        <line x1="100" y1="152" x2="86" y2="168" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="100" y1="152" x2="114" y2="168" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="86" y1="168" x2="78" y2="168" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="114" y1="168" x2="122" y2="168" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="100" y="195" text-anchor="middle" fill="#ff6b35" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">ФРАНЦУЗСКИЙ ЖИМ</text>
+    </svg></div>
+            <div class="info-grid">
+                <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">3</div></div>
+                <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">12</div></div>
+            </div>
+            <div class="muscles-section">
+                <div class="muscles-title">💪 Задействованные мышцы</div>
+                <div class="muscles-list"><span class="muscle-pill primary">Трицепс (длинная головка)</span><span class="muscle-pill">Трицепс (латеральная и медиальная)</span><span class="muscle-pill">Передняя дельта</span></div>
+            </div>
+            <div class="instructions">
+                <div class="instructions-title">📋 Техника выполнения</div>
+                <ol class="instructions-list"><li>Лягте на скамью, гантель или штанга над грудью, руки прямые</li><li>На вдохе медленно опустите снаряд за голову, сгибая локти</li><li>Локти не разводятся в стороны — они указывают вперёд/вверх</li><li>Опустите до уровня, когда предплечья касаются скамьи или чуть ниже</li><li>На выдохе разогните руки, возвращая снаряд в исходное положение</li></ol>
+            </div>
+            <div class="tips-box" style="margin-top:10px;">
+            <div class="tips-title">💡 Ключевые моменты</div>
+            <ul class="tips-list"><li>Локти — ключ к технике: если разводятся, нагрузка уходит с трицепса</li><li>Начинайте с лёгкого веса, чтобы отработать технику</li></ul>
+        </div>
+        </div>
+    </div>
+</div><div class="exercise-card">
+    <div class="exercise-header" data-exercise="12">
+        <div style="display:flex;align-items:center;flex:1;">
+            <div class="exercise-number">12</div>
+            <div class="exercise-name">Скручивания на пресс<span class="difficulty-badge difficulty-easy">Лёгкое</span></div>
+        </div>
+        <span class="toggle-icon">▼</span>
+    </div>
+    <div class="exercise-body" id="ex-12">
+        <div class="exercise-inner">
+            <div class="svg-container"><svg viewBox="0 0 200 200" style="width:100%;height:100%;">
+        <rect width="200" height="200" fill="#0f0f0f"/>
+        <line x1="25" y1="152" x2="175" y2="152" stroke="#333" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="85" cy="128" r="10" fill="none" stroke="#ff6b35" stroke-width="3"/>
+        <line x1="85" y1="138" x2="85" y2="152" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="85" y1="144" x2="65" y2="134" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <line x1="85" y1="144" x2="105" y2="134" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="65" cy="134" r="3.5" fill="#ff6b35"/>
+        <circle cx="105" cy="134" r="3.5" fill="#ff6b35"/>
+        <line x1="85" y1="152" x2="112" y2="152" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="112" y1="152" x2="125" y2="138" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="112" y1="152" x2="125" y2="166" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <circle cx="125" cy="138" r="3.5" fill="#ff6b35"/>
+        <circle cx="125" cy="166" r="3.5" fill="#ff6b35"/>
+        <line x1="125" y1="138" x2="135" y2="138" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="125" y1="166" x2="135" y2="166" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="100" y="195" text-anchor="middle" fill="#ff6b35" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">СКРУЧИВАНИЯ</text>
+    </svg></div>
+            <div class="info-grid">
+                <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">4</div></div>
+                <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">20</div></div>
+            </div>
+            <div class="muscles-section">
+                <div class="muscles-title">💪 Задействованные мышцы</div>
+                <div class="muscles-list"><span class="muscle-pill primary">Прямая мышца живота</span><span class="muscle-pill">Косые мышцы</span><span class="muscle-pill">Поперечная мышца</span><span class="muscle-pill">Поясничные мышцы</span></div>
+            </div>
+            <div class="instructions">
+                <div class="instructions-title">📋 Техника выполнения</div>
+                <ol class="instructions-list"><li>Лягте на спину, колени согнуты, стопы на полу, руки за головой или на груди</li><li>На выдохе скручивайте корпус, отрывая лопатки от пола</li><li>Тянитесь подбородком к груди, не к коленям — это подъём корпуса, не наклон</li><li>В верхней точке задержитесь на 1-2 секунды и сожмите пресс</li><li>На вдохе медленно опустите корпус, но не расслабляйте полностью</li></ol>
+            </div>
+            <div class="tips-box" style="margin-top:10px;">
+            <div class="tips-title">💡 Ключевые моменты</div>
+            <ul class="tips-list"><li>Не тяните голову руками — это нагружает шею</li><li>Дышите: выдох на усилие, вдох на опускание</li></ul>
+        </div>
+        </div>
+    </div>
+</div><div class="tips-box">
+    <div class="tips-title">💡 Советы дня Б</div>
+    <ul class="tips-list">
+        <li>Грудь — большая мышечная группа, давайте ей достаточный объём</li>
+        <li>Трицепс — 2/3 объёма руки, не пренебрегайте его тренировкой</li>
+        <li>Отдых между подходами 60-90 секунд для груди, 45-60 для трицепса</li>
+        <li>Скручивания делайте в темпе, без рывков — контроль важнее скорости</li>
+    </ul>
+</div></div><div id="day-V" class="day-content">
+    <div style="padding: 0 15px;">
+        <div class="day-title">📅 День В — Пятница</div>
+        <div class="day-subtitle">Ноги + Плечи + Шея + Пресс</div>
+        <div class="muscle-tags">
+            <span class="muscle-tag">Квадрицепс</span>
+            <span class="muscle-tag">Бицепс бедра</span>
+            <span class="muscle-tag">Ягодицы</span>
+            <span class="muscle-tag">Дельты</span>
+            <span class="muscle-tag">Шея</span>
+        </div>
+    </div>
+<div class="exercise-card">
+    <div class="exercise-header" data-exercise="13">
+        <div style="display:flex;align-items:center;flex:1;">
+            <div class="exercise-number">13</div>
+            <div class="exercise-name">Гоблет-приседания с гантелью<span class="difficulty-badge difficulty-medium">Среднее</span></div>
+        </div>
+        <span class="toggle-icon">▼</span>
+    </div>
+    <div class="exercise-body" id="ex-13">
+        <div class="exercise-inner">
+            <div class="svg-container"><svg viewBox="0 0 200 200" style="width:100%;height:100%;">
+        <rect width="200" height="200" fill="#0f0f0f"/>
+        <!-- Гантель у груди -->
+        <rect x="88" y="38" width="24" height="8" rx="3" fill="#f7931e"/>
+        <rect x="85" y="36" width="6" height="12" rx="2" fill="#ff6b35"/>
+        <rect x="109" y="36" width="6" height="12" rx="2" fill="#ff6b35"/>
+        <!-- Голова -->
+        <circle cx="100" cy="62" r="10" fill="none" stroke="#ff6b35" stroke-width="3"/>
+        <!-- Торс -->
+        <line x1="100" y1="72" x2="100" y2="108" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <!-- Руки держат гантель -->
+        <line x1="100" y1="82" x2="82" y2="46" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <line x1="100" y1="82" x2="118" y2="46" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="82" cy="46" r="3.5" fill="#ff6b35"/>
+        <circle cx="118" cy="46" r="3.5" fill="#ff6b35"/>
+        <!-- Бёдра -->
+        <line x1="100" y1="108" x2="78" y2="144" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="100" y1="108" x2="122" y2="144" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <circle cx="78" cy="144" r="4" fill="#ff6b35"/>
+        <circle cx="122" cy="144" r="4" fill="#ff6b35"/>
+        <!-- Голени -->
+        <line x1="78" y1="144" x2="72" y2="178" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="122" y1="144" x2="128" y2="178" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <!-- Ступни -->
+        <line x1="72" y1="178" x2="60" y2="178" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="128" y1="178" x2="140" y2="178" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="100" y="195" text-anchor="middle" fill="#ff6b35" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">ГОБЛЕТ-ПРИСЕДАНИЯ</text>
+    </svg></div>
+            <div class="info-grid">
+                <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">4</div></div>
+                <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">10-12</div></div>
+            </div>
+            <div class="muscles-section">
+                <div class="muscles-title">💪 Задействованные мышцы</div>
+                <div class="muscles-list"><span class="muscle-pill primary">Квадрицепс</span><span class="muscle-pill primary">Ягодицы</span><span class="muscle-pill">Бицепс бедра</span><span class="muscle-pill">Икры</span><span class="muscle-pill">Корпус</span><span class="muscle-pill">Разгибатели спины</span></div>
+            </div>
+            <div class="instructions">
+                <div class="instructions-title">📋 Техника выполнения</div>
+                <ol class="instructions-list"><li>Встаньте, ноги на ширине плеч, возьмите одну гантель обеими руками у груди (ладони под диском)</li><li>Локти прижаты к корпусу, гантель плотно у груди, спина прямая</li><li>На вдохе опуститесь вниз, сгибая колени и отводя таз назад</li><li>Приседьте до параллели бёдер с полом или чуть ниже, колени не заваливаются внутрь</li><li>На выдохе встаньте, напрягая квадрицепс и ягодицы в верхней точке</li></ol>
+            </div>
+            <div class="tips-box" style="margin-top:10px;">
+            <div class="tips-title">💡 Ключевые моменты</div>
+            <ul class="tips-list"><li>Гоблет-приседания безопаснее для спины, чем со штангой — идеально для начинающих</li><li>Колени следуют за носками, не сходятся внутрь</li></ul>
+        </div>
+        </div>
+    </div>
+</div><div class="exercise-card">
+    <div class="exercise-header" data-exercise="14">
+        <div style="display:flex;align-items:center;flex:1;">
+            <div class="exercise-number">14</div>
+            <div class="exercise-name">Выпады с гантелями<span class="difficulty-badge difficulty-medium">Среднее</span></div>
+        </div>
+        <span class="toggle-icon">▼</span>
+    </div>
+    <div class="exercise-body" id="ex-14">
+        <div class="exercise-inner">
+            <div class="svg-container"><svg viewBox="0 0 200 200" style="width:100%;height:100%;">
+        <rect width="200" height="200" fill="#0f0f0f"/>
+        <circle cx="90" cy="55" r="10" fill="none" stroke="#ff6b35" stroke-width="3"/>
+        <line x1="90" y1="65" x2="90" y2="100" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="90" y1="76" x2="65" y2="66" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <line x1="90" y1="76" x2="115" y2="66" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="65" cy="66" r="3.5" fill="#ff6b35"/>
+        <circle cx="115" cy="66" r="3.5" fill="#ff6b35"/>
+        <line x1="65" y1="66" x2="65" y2="46" stroke="#ff6b35" stroke-width="4" stroke-linecap="round"/>
+        <rect x="61" y="38" width="8" height="8" rx="2" fill="#f7931e"/>
+        <line x1="115" y1="66" x2="115" y2="46" stroke="#ff6b35" stroke-width="4" stroke-linecap="round"/>
+        <rect x="111" y="38" width="8" height="8" rx="2" fill="#f7931e"/>
+        <line x1="90" y1="100" x2="60" y2="130" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="90" y1="100" x2="120" y2="120" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <circle cx="60" cy="130" r="4" fill="#ff6b35"/>
+        <circle cx="120" cy="120" r="4" fill="#ff6b35"/>
+        <line x1="60" y1="130" x2="50" y2="155" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="120" y1="120" x2="130" y2="150" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="50" y1="155" x2="42" y2="155" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="130" y1="150" x2="138" y2="150" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="100" y="195" text-anchor="middle" fill="#ff6b35" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">ВЫПАДЫ С ГАНТЕЛЯМИ</text>
+    </svg></div>
+            <div class="info-grid">
+                <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">3</div></div>
+                <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">12 (на ногу)</div></div>
+            </div>
+            <div class="muscles-section">
+                <div class="muscles-title">💪 Задействованные мышцы</div>
+                <div class="muscles-list"><span class="muscle-pill primary">Квадрицепс</span><span class="muscle-pill primary">Ягодицы</span><span class="muscle-pill">Бицепс бедра</span><span class="muscle-pill">Икры</span><span class="muscle-pill">Корпус (стабилизация)</span></div>
+            </div>
+            <div class="instructions">
+                <div class="instructions-title">📋 Техника выполнения</div>
+                <ol class="instructions-list"><li>Встаньте прямо, гантели в руках, шагните одной ногой вперёд</li><li>Опустите таз, сгибая оба колена до угла ~90°</li><li>Заднее колено почти касается пола, передняя нога — вся стопа на полу</li><li>Толкнитесь передней ногой и вернитесь в исходное положение</li><li>Выполните все повторения на одну ногу, затем на другую</li></ol>
+            </div>
+            <div class="tips-box" style="margin-top:10px;">
+            <div class="tips-title">💡 Ключевые моменты</div>
+            <ul class="tips-list"><li>Торс остаётся вертикальным — не наклоняйтесь вперёд</li><li>Шаг должен быть достаточно длинным, чтобы переднее колено не выходило за носок</li></ul>
+        </div>
+        </div>
+    </div>
+</div><div class="exercise-card">
+    <div class="exercise-header" data-exercise="15">
+        <div style="display:flex;align-items:center;flex:1;">
+            <div class="exercise-number">15</div>
+            <div class="exercise-name">Ягодичный мостик лёжа<span class="difficulty-badge difficulty-easy">Лёгкое</span></div>
+        </div>
+        <span class="toggle-icon">▼</span>
+    </div>
+    <div class="exercise-body" id="ex-15">
+        <div class="exercise-inner">
+            <div class="svg-container"><svg viewBox="0 0 200 200" style="width:100%;height:100%;">
+        <rect width="200" height="200" fill="#0f0f0f"/>
+        <line x1="25" y1="155" x2="175" y2="155" stroke="#333" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="85" cy="115" r="10" fill="none" stroke="#ff6b35" stroke-width="3"/>
+        <line x1="85" y1="125" x2="100" y2="145" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="100" y1="145" x2="125" y2="125" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <circle cx="100" cy="145" r="4" fill="#ff6b35"/>
+        <line x1="125" y1="125" x2="140" y2="115" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="85" y1="125" x2="70" y2="135" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="70" y1="135" x2="70" y2="155" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="140" y1="115" x2="140" y2="155" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="70" y1="155" x2="60" y2="155" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="140" y1="155" x2="150" y2="155" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <!-- Руки -->
+        <line x1="85" y1="125" x2="55" y2="140" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <line x1="125" y1="125" x2="155" y2="140" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="55" cy="140" r="3.5" fill="#ff6b35"/>
+        <circle cx="155" cy="140" r="3.5" fill="#ff6b35"/>
+        <text x="100" y="195" text-anchor="middle" fill="#ff6b35" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">ЯГОДИЧНЫЙ МОСТИК</text>
+    </svg></div>
+            <div class="info-grid">
+                <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">3</div></div>
+                <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">15</div></div>
+            </div>
+            <div class="muscles-section">
+                <div class="muscles-title">💪 Задействованные мышцы</div>
+                <div class="muscles-list"><span class="muscle-pill primary">Ягодицы (основные)</span><span class="muscle-pill primary">Бицепс бедра</span><span class="muscle-pill">Разгибатели спины</span><span class="muscle-pill">Пресс</span><span class="muscle-pill">Поясничные мышцы</span></div>
+            </div>
+            <div class="instructions">
+                <div class="instructions-title">📋 Техника выполнения</div>
+                <ol class="instructions-list"><li>Лягте на спину, колени согнуты, стопы на полу на ширине плеч, руки вдоль тела</li><li>На выдохе поднимайте таз вверх, напрягая ягодицы и отрывая таз от пола</li><li>В верхней точке тело образует прямую линию от плеч до колен</li><li>Задержитесь на 2-3 секунды, максимально сжав ягодицы</li><li>На вдохе медленно опустите таз, но не кладите его на пол — держите напряжение</li></ol>
+            </div>
+            <div class="tips-box" style="margin-top:10px;">
+            <div class="tips-title">💡 Ключевые моменты</div>
+            <ul class="tips-list"><li>Не прогибайте поясницу вверх — напрягайте именно ягодицы</li><li>Для усложнения положите гантель на бёдра</li></ul>
+        </div>
+        </div>
+    </div>
+</div><div class="exercise-card">
+    <div class="exercise-header" data-exercise="16">
+        <div style="display:flex;align-items:center;flex:1;">
+            <div class="exercise-number">16</div>
+            <div class="exercise-name">Жим гантелей сидя<span class="difficulty-badge difficulty-medium">Среднее</span></div>
+        </div>
+        <span class="toggle-icon">▼</span>
+    </div>
+    <div class="exercise-body" id="ex-16">
+        <div class="exercise-inner">
+            <div class="svg-container"><svg viewBox="0 0 200 200" style="width:100%;height:100%;">
+        <rect width="200" height="200" fill="#0f0f0f"/>
+        <line x1="25" y1="152" x2="175" y2="152" stroke="#333" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="100" cy="108" r="10" fill="none" stroke="#ff6b35" stroke-width="3"/>
+        <line x1="100" y1="118" x2="100" y2="152" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="100" y1="128" x2="70" y2="108" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <line x1="100" y1="128" x2="130" y2="108" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="70" cy="108" r="3.5" fill="#ff6b35"/>
+        <circle cx="130" cy="108" r="3.5" fill="#ff6b35"/>
+        <line x1="70" y1="108" x2="70" y2="78" stroke="#ff6b35" stroke-width="4" stroke-linecap="round"/>
+        <rect x="66" y="70" width="8" height="8" rx="2" fill="#f7931e"/>
+        <line x1="130" y1="108" x2="130" y2="78" stroke="#ff6b35" stroke-width="4" stroke-linecap="round"/>
+        <rect x="126" y="70" width="8" height="8" rx="2" fill="#f7931e"/>
+        <line x1="100" y1="152" x2="86" y2="168" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="100" y1="152" x2="114" y2="168" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="86" y1="168" x2="78" y2="168" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="114" y1="168" x2="122" y2="168" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="100" y="195" text-anchor="middle" fill="#ff6b35" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">ЖИМ ГАНТЕЛЕЙ СИДЯ</text>
+    </svg></div>
+            <div class="info-grid">
+                <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">3</div></div>
+                <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">10-12</div></div>
+            </div>
+            <div class="muscles-section">
+                <div class="muscles-title">💪 Задействованные мышцы</div>
+                <div class="muscles-list"><span class="muscle-pill primary">Передняя дельта</span><span class="muscle-pill primary">Средняя дельта</span><span class="muscle-pill">Трицепс</span><span class="muscle-pill">Верх груди</span><span class="muscle-pill">Корпус</span></div>
+            </div>
+            <div class="instructions">
+                <div class="instructions-title">📋 Техника выполнения</div>
+                <ol class="instructions-list"><li>Сядьте на скамью со спинкой, спина плотно прижата, гантели у плеч</li><li>На выдохе выжмите гантели вверх до полного выпрямления рук</li><li>Гантели движутся по дуге, в верхней точке они почти соприкасаются</li><li>На вдохе медленно опустите гантели до уровня плеч или чуть ниже</li><li>Локти не опускайте слишком низко — это лишняя нагрузка на плечевой сустав</li></ol>
+            </div>
+            <div class="tips-box" style="margin-top:10px;">
+            <div class="tips-title">💡 Ключевые моменты</div>
+            <ul class="tips-list"><li>Не прогибайте поясницу — спина плотно к спинке</li><li>Если нет скамьи — можно делать стоя, но сидя легче держать корпус</li></ul>
+        </div>
+        </div>
+    </div>
+</div><div class="exercise-card">
+    <div class="exercise-header" data-exercise="17">
+        <div style="display:flex;align-items:center;flex:1;">
+            <div class="exercise-number">17</div>
+            <div class="exercise-name">Подъём гантелей в стороны<span class="difficulty-badge difficulty-easy">Лёгкое</span></div>
+        </div>
+        <span class="toggle-icon">▼</span>
+    </div>
+    <div class="exercise-body" id="ex-17">
+        <div class="exercise-inner">
+            <div class="svg-container"><svg viewBox="0 0 200 200" style="width:100%;height:100%;">
+        <rect width="200" height="200" fill="#0f0f0f"/>
+        <circle cx="100" cy="56" r="10" fill="none" stroke="#777" stroke-width="2.5"/>
+        <line x1="100" y1="66" x2="100" y2="106" stroke="#555" stroke-width="4" stroke-linecap="round"/>
+        <line x1="100" y1="76" x2="55" y2="66" stroke="#555" stroke-width="3" stroke-linecap="round"/>
+        <line x1="100" y1="76" x2="145" y2="66" stroke="#555" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="55" cy="66" r="3.5" fill="#ff6b35"/>
+        <circle cx="145" cy="66" r="3.5" fill="#ff6b35"/>
+        <line x1="55" y1="66" x2="55" y2="46" stroke="#ff6b35" stroke-width="4" stroke-linecap="round"/>
+        <rect x="51" y="38" width="8" height="8" rx="2" fill="#f7931e"/>
+        <line x1="145" y1="66" x2="145" y2="46" stroke="#ff6b35" stroke-width="4" stroke-linecap="round"/>
+        <rect x="141" y="38" width="8" height="8" rx="2" fill="#f7931e"/>
+        <ellipse cx="78" cy="68" rx="6" ry="10" fill="#ff6b35" opacity="0.55" transform="rotate(-35 78 68)"/>
+        <ellipse cx="122" cy="68" rx="6" ry="10" fill="#ff6b35" opacity="0.55" transform="rotate(35 122 68)"/>
+        <line x1="100" y1="106" x2="86" y2="146" stroke="#555" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="100" y1="106" x2="114" y2="146" stroke="#555" stroke-width="3.5" stroke-linecap="round"/>
+        <circle cx="86" cy="146" r="4" fill="#777"/>
+        <circle cx="114" cy="146" r="4" fill="#777"/>
+        <line x1="86" y1="146" x2="80" y2="176" stroke="#555" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="114" y1="146" x2="120" y2="176" stroke="#555" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="80" y1="176" x2="72" y2="176" stroke="#555" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="120" y1="176" x2="128" y2="176" stroke="#555" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="100" y="195" text-anchor="middle" fill="#ff6b35" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">ПОДЪЁМ В СТОРОНЫ</text>
+    </svg></div>
+            <div class="info-grid">
+                <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">3</div></div>
+                <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">15</div></div>
+            </div>
+            <div class="muscles-section">
+                <div class="muscles-title">💪 Задействованные мышцы</div>
+                <div class="muscles-list"><span class="muscle-pill primary">Средняя дельта</span><span class="muscle-pill">Передняя дельта</span><span class="muscle-pill">Трапеции (верх)</span></div>
+            </div>
+            <div class="instructions">
+                <div class="instructions-title">📋 Техника выполнения</div>
+                <ol class="instructions-list"><li>Встаньте прямо, гантели в руках, ладони к корпусу, локти слегка согнуты</li><li>На выдохе поднимайте руки в стороны до уровня плеч</li><li>Локти остаются чуть согнутыми на всём протяжении — не разгибайте</li><li>В верхней точке задержитесь на 1 секунду, напрягая среднюю дельту</li><li>На вдохе медленно опустите гантели, контролируя негативную фазу</li></ol>
+            </div>
+            <div class="tips-box" style="margin-top:10px;">
+            <div class="tips-title">💡 Ключевые моменты</div>
+            <ul class="tips-list"><li>Не поднимайте выше плеч — это перенагружает трапеции</li><li>Вес должен быть умеренным — это изолирующее упражнение</li></ul>
+        </div>
+        </div>
+    </div>
+</div><div class="exercise-card">
+    <div class="exercise-header" data-exercise="18">
+        <div style="display:flex;align-items:center;flex:1;">
+            <div class="exercise-number">18</div>
+            <div class="exercise-name">Наклоны головы с отягощением<span class="difficulty-badge difficulty-easy">Лёгкое</span></div>
+        </div>
+        <span class="toggle-icon">▼</span>
+    </div>
+    <div class="exercise-body" id="ex-18">
+        <div class="exercise-inner">
+            <div class="svg-container"><svg viewBox="0 0 200 200" style="width:100%;height:100%;">
+        <rect width="200" height="200" fill="#0f0f0f"/>
+        <circle cx="100" cy="56" r="10" fill="none" stroke="#777" stroke-width="2.5"/>
+        <line x1="100" y1="66" x2="100" y2="106" stroke="#555" stroke-width="4" stroke-linecap="round"/>
+        <line x1="100" y1="76" x2="75" y2="66" stroke="#555" stroke-width="3" stroke-linecap="round"/>
+        <line x1="100" y1="76" x2="125" y2="66" stroke="#555" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="75" cy="66" r="3.5" fill="#ff6b35"/>
+        <circle cx="125" cy="66" r="3.5" fill="#ff6b35"/>
+        <ellipse cx="100" cy="60" rx="8" ry="5" fill="#ff6b35" opacity="0.5" transform="rotate(-10 100 60)"/>
+        <path d="M 85 50 Q 100 70 115 50" stroke="#ff6b35" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <line x1="100" y1="106" x2="86" y2="146" stroke="#555" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="100" y1="106" x2="114" y2="146" stroke="#555" stroke-width="3.5" stroke-linecap="round"/>
+        <circle cx="86" cy="146" r="4" fill="#777"/>
+        <circle cx="114" cy="146" r="4" fill="#777"/>
+        <line x1="86" y1="146" x2="80" y2="176" stroke="#555" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="114" y1="146" x2="120" y2="176" stroke="#555" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="80" y1="176" x2="72" y2="176" stroke="#555" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="120" y1="176" x2="128" y2="176" stroke="#555" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="100" y="195" text-anchor="middle" fill="#ff6b35" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">НАКЛОНЫ ШЕИ</text>
+    </svg></div>
+            <div class="info-grid">
+                <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">3</div></div>
+                <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">15</div></div>
+            </div>
+            <div class="muscles-section">
+                <div class="muscles-title">💪 Задействованные мышцы</div>
+                <div class="muscles-list"><span class="muscle-pill primary">Грудино-ключично-сосцевидная</span><span class="muscle-pill primary">Передние мышцы шеи</span><span class="muscle-pill">Лестничная мышца</span><span class="muscle-pill">Трапеции (верх)</span></div>
+            </div>
+            <div class="instructions">
+                <div class="instructions-title">📋 Техника выполнения</div>
+                <ol class="instructions-list"><li>Сядьте прямо, полотенце или мягкая накладка на голове для комфорта</li><li>Положите ладонь (или небольшой диск) на лоб как отягощение</li><li>На выдохе медленно наклоните голову вперёд, подбородок к груди</li><li>Задержитесь на 1-2 секунды, чувствуя напряжение передних мышц шеи</li><li>На вдохе плавно верните голову в исходное положение</li></ol>
+            </div>
+            <div class="tips-box" style="margin-top:10px;">
+            <div class="tips-title">💡 Ключевые моменты</div>
+            <ul class="tips-list"><li>Движения должны быть плавными — шея очень уязвима к травмам</li><li>Начинайте без веса, добавляйте постепенно</li></ul>
+        </div>
+        </div>
+    </div>
+</div><div class="exercise-card">
+    <div class="exercise-header" data-exercise="19">
+        <div style="display:flex;align-items:center;flex:1;">
+            <div class="exercise-number">19</div>
+            <div class="exercise-name">Подъёмы ног лёжа<span class="difficulty-badge difficulty-medium">Среднее</span></div>
+        </div>
+        <span class="toggle-icon">▼</span>
+    </div>
+    <div class="exercise-body" id="ex-19">
+        <div class="exercise-inner">
+            <div class="svg-container"><svg viewBox="0 0 200 200" style="width:100%;height:100%;">
+        <rect width="200" height="200" fill="#0f0f0f"/>
+        <line x1="20" y1="152" x2="180" y2="152" stroke="#333" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="85" cy="128" r="10" fill="none" stroke="#777" stroke-width="2.5"/>
+        <line x1="85" y1="138" x2="85" y2="152" stroke="#555" stroke-width="4" stroke-linecap="round"/>
+        <line x1="85" y1="144" x2="65" y2="134" stroke="#555" stroke-width="3" stroke-linecap="round"/>
+        <line x1="85" y1="144" x2="105" y2="134" stroke="#555" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="65" cy="134" r="3.5" fill="#ff6b35"/>
+        <circle cx="105" cy="134" r="3.5" fill="#ff6b35"/>
+        <line x1="85" y1="152" x2="112" y2="152" stroke="#555" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="112" y1="152" x2="122" y2="122" stroke="#ff6b35" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="112" y1="152" x2="132" y2="128" stroke="#ff6b35" stroke-width="3.5" stroke-linecap="round"/>
+        <circle cx="122" cy="122" r="3.5" fill="#ff6b35"/>
+        <circle cx="132" cy="128" r="3.5" fill="#ff6b35"/>
+        <line x1="122" y1="122" x2="132" y2="112" stroke="#555" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="132" y1="128" x2="142" y2="118" stroke="#555" stroke-width="3.5" stroke-linecap="round"/>
+        <ellipse cx="118" cy="138" rx="8" ry="5" fill="#ff6b35" opacity="0.5" transform="rotate(-30 118 138)"/>
+        <text x="100" y="195" text-anchor="middle" fill="#ff6b35" font-size="11" font-weight="700" font-family="Segoe UI,sans-serif">ПОДЪЁМ НОГ</text>
+    </svg></div>
+            <div class="info-grid">
+                <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">3</div></div>
+                <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">15</div></div>
+            </div>
+            <div class="muscles-section">
+                <div class="muscles-title">💪 Задействованные мышцы</div>
+                <div class="muscles-list"><span class="muscle-pill primary">Прямая мышца живота (низ)</span><span class="muscle-pill">Подвздошно-поясничная</span><span class="muscle-pill">Косые мышцы</span><span class="muscle-pill">Бёдра</span></div>
+            </div>
+            <div class="instructions">
+                <div class="instructions-title">📋 Техника выполнения</div>
+                <ol class="instructions-list"><li>Лягте на спину, руки вдоль тела или под ягодицы для поддержки поясницы</li><li>Ноги прямые или слегка согнуты в коленях, поднимите их на 15-20 см от пола</li><li>На выдохе поднимайте ноги вверх до угла ~90° с полом или чуть выше</li><li>В верхней точке задержитесь и подтяните таз вверх (обратное скручивание)</li><li>На вдохе медленно опустите ноги, но не кладите их на пол — поддерживайте напряжение</li></ol>
+            </div>
+            <div class="tips-box" style="margin-top:10px;">
+            <div class="tips-title">💡 Ключевые моменты</div>
+            <ul class="tips-list"><li>Если поясница отрывается от пола — согните ноги или подложите руки под ягодицы</li><li>Не используйте инерцию — контролируйте движение ногами</li></ul>
+        </div>
+        </div>
+    </div>
+</div><div class="tips-box">
+    <div class="tips-title">💡 Советы дня В</div>
+    <ul class="tips-list">
+        <li>Ноги — самая большая мышечная группа, не бойтесь брать рабочий вес</li>
+        <li>Гоблет-приседания — отличная альтернатива штанге для подростков</li>
+        <li>Плечи любят объём — жим + в стороны дают полноценную нагрузку</li>
+        <li>Шея — малая мышечная группа, работайте с лёгким весом и идеальной техникой</li>
+    </ul>
+</div></div>
+    <div class="rest-day">
+        <div class="emoji">😴</div>
+        <h3>Дни отдыха</h3>
+        <p>Вт, Чт, Сб, Вс — восстановление, растяжка, лёгкая активность (ходьба, плавание)</p>
+    </div>
+
+    <div class="footer">
+        🏋️ Сбалансированный план тренировок | 3 дня в неделю | Для подростков 17+<br>
+        Нажмите на упражнение, чтобы увидеть технику выполнения
+    </div>
+
+    <script>
+        document.getElementById('tab-A').addEventListener('click', function() { showDay('A'); });
+        document.getElementById('tab-B').addEventListener('click', function() { showDay('B'); });
+        document.getElementById('tab-V').addEventListener('click', function() { showDay('V'); });
+
+        function showDay(day) {
+            document.querySelectorAll('.day-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+            document.getElementById('day-' + day).classList.add('active');
+            document.getElementById('tab-' + day).classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        document.querySelectorAll('.exercise-header').forEach(function(header) {
+            header.addEventListener('click', function(e) {
+                e.stopPropagation();
+                toggleExercise(this);
+            });
+        });
+
+        function toggleExercise(header) {
+            var exId = header.getAttribute('data-exercise');
+            var body = document.getElementById('ex-' + exId);
+            var icon = header.querySelector('.toggle-icon');
+            if (body.classList.contains('open')) {
+                body.classList.remove('open');
+                icon.classList.remove('open');
+            } else {
+                body.classList.add('open');
+                icon.classList.add('open');
+            }
+        }
+    </script>
+</body>
+</html>
