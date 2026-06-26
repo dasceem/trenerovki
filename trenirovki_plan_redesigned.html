@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🏋️ План Тренировок</title>
+    <style>
+        :root {
+            --bg: #0a0a0f; --surface: #14141a; --surface-elevated: #1c1c24; --surface-hover: #252530;
+            --border: #2a2a35; --border-light: #353545; --text: #f0f0f5; --text-secondary: #8a8a9a;
+            --text-muted: #5a5a6a; --accent: #ff6b35; --accent-light: #ff8c5a; --accent-dark: #e55a2b;
+            --accent-glow: rgba(255,107,53,0.15); --success: #4ade80; --success-bg: rgba(74,222,128,0.1);
+            --danger: #f87171; --radius-sm: 10px; --radius-md: 16px; --radius-lg: 20px;
+            --shadow: 0 4px 20px rgba(0,0,0,0.4); --shadow-accent: 0 4px 30px rgba(255,107,53,0.2);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh;
+            -webkit-overflow-scrolling: touch; overflow-x: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, var(--accent) 0%, #f7931e 100%);
+            padding: 28px 20px 24px; text-align: center; position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 8px 32px rgba(255,107,53,0.25);
+        }
+        .header h1 { font-size: 1.5rem; font-weight: 800; text-transform: uppercase; letter-spacing: 3px; text-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+        .header p { font-size: 0.8rem; opacity: 0.92; margin-top: 6px; font-weight: 500; letter-spacing: 0.5px; }
+        .tabs-wrapper { background: var(--surface); position: sticky; top: 88px; z-index: 99; border-bottom: 1px solid var(--border); backdrop-filter: blur(10px); }
+        .tabs { display: flex; max-width: 600px; margin: 0 auto; }
+        .tab { flex: 1; padding: 16px 8px; text-align: center; cursor: pointer; font-weight: 700; font-size: 0.8rem; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); border-bottom: 3px solid transparent; text-transform: uppercase; letter-spacing: 1px; user-select: none; color: var(--text-secondary); position: relative; }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); background: var(--accent-glow); }
+        .tab:active { opacity: 0.7; }
+        .sticky-bar { background: var(--surface-elevated); border-bottom: 1px solid var(--border); position: sticky; z-index: 98; padding: 12px 16px; }
+        .timer-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .timer-label { font-size: 0.75rem; color: var(--text-secondary); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+        .timer-display { font-size: 1.5rem; font-weight: 800; color: var(--accent); font-family: 'SF Mono', Monaco, monospace; letter-spacing: 1px; }
+        .timer-btn { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); border: none; color: #fff; padding: 10px 22px; border-radius: 24px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(255,107,53,0.3); }
+        .timer-btn:active { transform: scale(0.96); }
+        .timer-btn.stop { background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 4px 15px rgba(239,68,68,0.3); }
+        .progress-label { font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 6px; display: flex; justify-content: space-between; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .progress-bg { background: #252530; height: 6px; border-radius: 3px; overflow: hidden; }
+        .progress-fill { background: linear-gradient(90deg, var(--accent), #f7931e); height: 100%; width: 0%; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); border-radius: 3px; }
+        .day-content { display: none; padding: 16px; max-width: 720px; margin: 0 auto; animation: fadeIn 0.4s ease; }
+        .day-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .day-header { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+        .day-title { font-size: 1.25rem; font-weight: 800; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
+        .day-subtitle { color: var(--text-secondary); font-size: 0.9rem; font-weight: 500; }
+        .muscle-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+        .muscle-tag { background: var(--surface-elevated); border: 1px solid var(--border-light); padding: 5px 14px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent-light); }
+        .exercise-card { background: var(--surface); border-radius: var(--radius-md); margin-bottom: 16px; border: 1px solid var(--border); overflow: hidden; transition: all 0.3s ease; }
+        .exercise-card:hover { border-color: var(--border-light); transform: translateY(-1px); box-shadow: var(--shadow); }
+        .exercise-header { padding: 18px 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; background: linear-gradient(to right, var(--surface), var(--surface-elevated)); }
+        .exercise-header:active { background: var(--surface-hover); }
+        .exercise-main { display: flex; align-items: center; flex: 1; gap: 12px; }
+        .exercise-number { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: #fff; width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem; flex-shrink: 0; box-shadow: 0 2px 8px rgba(255,107,53,0.3); }
+        .exercise-name { font-size: 0.95rem; font-weight: 700; flex: 1; line-height: 1.3; }
+        .difficulty-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; margin-left: 8px; letter-spacing: 0.5px; }
+        .difficulty-easy { background: var(--success-bg); color: var(--success); }
+        .difficulty-medium { background: rgba(255,193,7,0.15); color: #ffc107; }
+        .difficulty-hard { background: rgba(244,67,54,0.15); color: var(--danger); }
+        .toggle-icon { font-size: 1.1rem; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); color: var(--text-muted); flex-shrink: 0; width: 24px; text-align: center; }
+        .toggle-icon.open { transform: rotate(180deg); color: var(--accent); }
+        .exercise-body { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1); }
+        .exercise-body.open { max-height: 2000px; }
+        .exercise-inner { padding: 0 16px 18px; }
+        .gif-box { width: 100%; height: 220px; background: #fff; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; overflow: hidden; border: 1px solid var(--border); position: relative; }
+        .gif-box img { width: 100%; height: 100%; object-fit: contain; display: block; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+        .info-box { background: var(--surface-elevated); padding: 14px; border-radius: var(--radius-sm); text-align: center; border: 1px solid var(--border); }
+        .info-label { font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; font-weight: 600; }
+        .info-value { font-size: 1.2rem; font-weight: 800; color: var(--accent); }
+        .muscles-section { background: var(--surface-elevated); padding: 14px; border-radius: var(--radius-sm); margin-bottom: 16px; border: 1px solid var(--border); }
+        .muscles-title { font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; font-weight: 700; }
+        .muscles-list { display: flex; flex-wrap: wrap; gap: 6px; }
+        .muscle-pill { background: #252530; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; color: var(--text-secondary); border: 1px solid var(--border); }
+        .muscle-pill.primary { background: rgba(255,107,53,0.12); color: var(--accent-light); border: 1px solid rgba(255,107,53,0.25); font-weight: 600; }
+        .instructions { background: var(--surface-elevated); border-radius: var(--radius-sm); padding: 18px; margin-bottom: 16px; border: 1px solid var(--border); position: relative; }
+        .instructions::before { content: ''; position: absolute; left: 0; top: 16px; bottom: 16px; width: 3px; background: linear-gradient(to bottom, var(--accent), var(--accent-dark)); border-radius: 0 3px 3px 0; }
+        .instructions-title { font-weight: 700; color: var(--accent); margin-bottom: 12px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .instructions-list { list-style: none; counter-reset: step; }
+        .instructions-list li { padding: 10px 0 10px 34px; position: relative; font-size: 0.85rem; color: #b0b0c0; border-bottom: 1px solid var(--border); line-height: 1.5; }
+        .instructions-list li:last-child { border-bottom: none; }
+        .instructions-list li::before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 10px; background: var(--surface-hover); color: var(--accent); width: 24px; height: 24px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 800; border: 1px solid var(--border-light); }
+        .tips-box { background: linear-gradient(135deg, rgba(255,107,53,0.08), rgba(247,147,30,0.05)); border: 1px solid rgba(255,107,53,0.15); border-radius: var(--radius-sm); padding: 16px; }
+        .tips-title { font-weight: 700; color: var(--accent); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
+        .tips-list { list-style: none; font-size: 0.82rem; color: #a0a0b0; }
+        .tips-list li { padding: 6px 0 6px 22px; position: relative; }
+        .tips-list li::before { content: "▸"; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
+        .sets-tracker { background: var(--surface-elevated); border-radius: var(--radius-sm); padding: 16px; margin-top: 18px; border: 1px solid var(--border); }
+        .sets-title { font-weight: 700; color: var(--accent); margin-bottom: 14px; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; }
+        .sets-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .set-check { display: flex; align-items: center; gap: 8px; background: var(--surface); padding: 10px 14px; border-radius: 12px; cursor: pointer; transition: all 0.2s; border: 2px solid var(--border); user-select: none; -webkit-user-select: none; flex: 1; min-width: 140px; }
+        .set-check:active { transform: scale(0.97); }
+        .set-check input { display: none; }
+        .set-check .set-box { width: 24px; height: 24px; border: 2px solid var(--border-light); border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; background: var(--bg); }
+        .set-check.checked { background: rgba(255,107,53,0.08); border-color: rgba(255,107,53,0.4); }
+        .set-check.checked .set-box { background: var(--accent); border-color: var(--accent); box-shadow: 0 2px 8px rgba(255,107,53,0.3); }
+        .set-check.checked .set-box::after { content: "✓"; color: #fff; font-size: 0.75rem; font-weight: 800; }
+        .set-label { font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); }
+        .set-check.checked .set-label { color: var(--text); }
+        .set-weight { background: var(--bg); border: 1px solid var(--border-light); color: var(--text); padding: 5px 8px; border-radius: 8px; width: 60px; text-align: center; font-size: 0.8rem; outline: none; margin-left: auto; font-weight: 600; }
+        .set-weight:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+        .rest-btn-inline { background: var(--surface-hover); border: 1px solid var(--border-light); color: var(--accent); padding: 8px 14px; border-radius: 10px; font-weight: 700; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+        .rest-btn-inline:active { transform: scale(0.95); background: var(--accent); color: #fff; }
+        .day-tips { background: linear-gradient(135deg, rgba(255,107,53,0.1), rgba(247,147,30,0.05)); border: 1px solid rgba(255,107,53,0.2); border-radius: var(--radius-md); padding: 20px; margin: 20px 0; }
+        .day-tips .tips-title { font-size: 1rem; margin-bottom: 12px; }
+        .day-tips .tips-list li { color: #c0c0d0; font-size: 0.85rem; }
+        .rest-day { background: var(--surface); border-radius: var(--radius-md); padding: 40px 24px; text-align: center; margin: 20px auto; max-width: 720px; border: 1px solid var(--border); }
+        .rest-day .emoji { font-size: 3.5rem; margin-bottom: 16px; display: block; }
+        .rest-day h3 { font-size: 1.2rem; margin-bottom: 8px; font-weight: 800; }
+        .rest-day p { color: var(--text-secondary); font-size: 0.9rem; }
+        .rest-timer-float { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(120px); background: linear-gradient(135deg, var(--surface-elevated), var(--surface)); border: 1px solid var(--border-light); border-top: 3px solid var(--accent); border-radius: var(--radius-lg); padding: 18px 28px; z-index: 200; display: flex; align-items: center; gap: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 30px rgba(255,107,53,0.1); transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1); backdrop-filter: blur(20px); }
+        .rest-timer-float.active { transform: translateX(-50%) translateY(0); }
+        .rest-display { font-size: 2rem; font-weight: 800; color: var(--accent); font-family: monospace; min-width: 60px; text-align: center; }
+        .rest-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; }
+        .rest-controls { display: flex; gap: 8px; }
+        .rest-btn { background: var(--surface-hover); border: 1px solid var(--border-light); color: var(--text); width: 36px; height: 36px; border-radius: 50%; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .rest-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .rest-close { background: transparent; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; margin-left: 4px; padding: 4px; }
+        .rest-close:hover { color: var(--danger); }
+        .calendar-section { padding: 24px 16px; background: var(--surface); margin: 16px auto; max-width: 720px; border-radius: var(--radius-md); border: 1px solid var(--border); }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+        .calendar-title { font-size: 1.1rem; font-weight: 800; }
+        .calendar-nav { display: flex; gap: 8px; }
+        .cal-nav-btn { background: var(--surface-elevated); border: 1px solid var(--border); color: var(--text); width: 36px; height: 36px; border-radius: 10px; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .cal-nav-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .cal-day-header { text-align: center; font-size: 0.65rem; color: var(--text-muted); padding: 10px 0; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
+        .cal-day { aspect-ratio: 1; background: var(--bg); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; position: relative; font-size: 0.85rem; font-weight: 700; }
+        .cal-day:hover { border-color: var(--border-light); background: var(--surface-hover); }
+        .cal-day.today { border-color: var(--accent); background: var(--accent-glow); color: var(--accent); }
+        .cal-day.has-workout::after { content: ""; position: absolute; bottom: 5px; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px rgba(255,107,53,0.5); }
+        .cal-day.rest-day::after { background: var(--success); box-shadow: 0 0 6px rgba(74,222,128,0.4); }
+        .cal-day .workout-type { font-size: 0.55rem; margin-top: 2px; font-weight: 700; }
+        .cal-day.rest-day .workout-type { color: var(--success); }
+        .cal-day.other-month { color: var(--text-muted); background: rgba(10,10,15,0.5); }
+        .cal-day.selected { border-color: var(--accent); box-shadow: 0 0 20px rgba(255,107,53,0.15); }
+        .stats-section { padding: 24px 16px; background: var(--surface); margin: 16px auto 24px; max-width: 720px; border-radius: var(--radius-md); border: 1px solid var(--border); }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; }
+        .stat-card { background: var(--surface-elevated); border-radius: var(--radius-sm); padding: 20px 12px; text-align: center; border: 1px solid var(--border); transition: all 0.3s; }
+        .stat-card:hover { border-color: var(--border-light); transform: translateY(-2px); }
+        .stat-value { font-size: 1.6rem; font-weight: 800; color: var(--accent); }
+        .stat-label { font-size: 0.65rem; color: var(--text-secondary); margin-top: 6px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        .reset-btn { background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 10px 20px; border-radius: 20px; font-size: 0.75rem; cursor: pointer; margin-top: 16px; font-weight: 600; transition: all 0.2s; }
+        .reset-btn:hover { border-color: var(--danger); color: var(--danger); background: rgba(244,67,54,0.05); }
+        .day-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 300; display: none; align-items: flex-end; justify-content: center; padding: 0; backdrop-filter: blur(5px); }
+        .day-modal-overlay.active { display: flex; }
+        .day-modal { background: linear-gradient(to top, var(--surface-elevated), var(--surface)); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 28px 24px 32px; width: 100%; max-width: 500px; border: 1px solid var(--border); border-bottom: none; animation: slideUpModal 0.35s cubic-bezier(0.34,1.56,0.64,1); box-shadow: 0 -10px 40px rgba(0,0,0,0.5); }
+        @keyframes slideUpModal { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .day-modal h3 { margin-bottom: 20px; font-size: 1.15rem; font-weight: 800; }
+        .workout-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+        .workout-option { background: var(--bg); border: 2px solid var(--border); border-radius: 14px; padding: 14px; cursor: pointer; display: flex; align-items: center; gap: 14px; transition: all 0.2s; font-weight: 700; font-size: 0.9rem; }
+        .workout-option:hover, .workout-option.selected { border-color: var(--accent); background: var(--accent-glow); }
+        .workout-option .opt-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 800; flex-shrink: 0; }
+        .opt-a { background: rgba(255,107,53,0.15); color: var(--accent); }
+        .opt-b { background: rgba(33,150,243,0.15); color: #2196f3; }
+        .opt-v { background: rgba(156,39,176,0.15); color: #9c27b0; }
+        .opt-rest { background: rgba(76,175,80,0.15); color: var(--success); }
+        .modal-close { background: var(--surface-hover); border: none; color: var(--text); padding: 14px; border-radius: 14px; width: 100%; font-weight: 700; cursor: pointer; margin-top: 8px; font-size: 0.9rem; transition: all 0.2s; }
+        .modal-close:hover { background: var(--border-light); }
+        .delete-workout { background: rgba(244,67,54,0.08); border: 1px solid rgba(244,67,54,0.2); color: var(--danger); padding: 12px; border-radius: 14px; width: 100%; font-weight: 700; cursor: pointer; margin-top: 8px; font-size: 0.85rem; transition: all 0.2s; }
+        .delete-workout:hover { background: rgba(244,67,54,0.15); }
+        .footer { text-align: center; padding: 30px 16px; color: var(--text-muted); font-size: 0.75rem; line-height: 1.8; }
+        @media (max-width: 400px) {
+            .header h1 { font-size: 1.3rem; }
+            .timer-display { font-size: 1.2rem; }
+            .rest-timer-float { padding: 14px 20px; gap: 12px; border-radius: 16px; }
+            .rest-display { font-size: 1.6rem; }
+            .set-check { min-width: 100%; }
+        }
+        @media (min-width: 768px) {
+            .day-content, .calendar-section, .stats-section, .rest-day { padding-left: 24px; padding-right: 24px; }
+            .gif-box { height: 280px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏋️ План Тренировок</h1>
+        <p>3 дня в неделю | Сила и масса | Для подростков 17+</p>
+    </div>
+    <div class="tabs-wrapper">
+        <div class="tabs">
+            <div class="tab active" id="tab-A">День А</div>
+            <div class="tab" id="tab-B">День Б</div>
+            <div class="tab" id="tab-V">День В</div>
+        </div>
+    </div>
+    <div class="sticky-bar" style="top:140px;">
+        <div class="timer-row">
+            <div>
+                <div class="timer-label">⏱️ Тренировка</div>
+                <div class="timer-display" id="main-timer">00:00:00</div>
+            </div>
+            <button class="timer-btn" id="timer-toggle" onclick="toggleWorkoutTimer()">▶ Начать</button>
+        </div>
+        <div>
+            <div class="progress-label"><span>Прогресс тренировки</span><span id="progress-text">0%</span></div>
+            <div class="progress-bg"><div class="progress-fill" id="progress-fill"></div></div>
+        </div>
+    </div>
+
+<div id="day-A" class="day-content active">
+    <div class="day-header">
+        <div class="day-title">📅 День А — Понедельник</div>
+        <div class="day-subtitle">Спина + Бицепс + Пресс</div>
+        <div class="muscle-tags">
+            <span class="muscle-tag">Широчайшие</span>
+            <span class="muscle-tag">Ромбовидные</span>
+            <span class="muscle-tag">Трапеции</span>
+            <span class="muscle-tag">Бицепс</span>
+            <span class="muscle-tag">Пресс</span>
+        </div>
+    </div>
+    <div class="exercise-card">
+        <div class="exercise-header" data-exercise="1">
+            <div class="exercise-main">
+                <div class="exercise-number">1</div>
+                <div class="exercise-name">Подтягивания широким хватом<span class="difficulty-badge difficulty-hard">Сложное</span></div>
+            </div>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="exercise-body" id="ex-1">
+            <div class="exercise-inner">
+                <div class="gif-box"><img src="https://kimi-web-img.moonshot.cn/img/fitnessprogramer.com/6f4a2a9cf9101c55ac6e3a5495e483aef88f9b47.gif" alt="Подтягивания"></div>
+                <div class="info-grid">
+                    <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">4</div></div>
+                    <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">MAX</div></div>
+                </div>
+                <div class="muscles-section">
+                    <div class="muscles-title">💪 Задействованные мышцы</div>
+                    <div class="muscles-list"><span class="muscle-pill primary">Широчайшие (основные)</span><span class="muscle-pill primary">Ромбовидные</span><span class="muscle-pill">Бицепс</span><span class="muscle-pill">Задняя дельта</span><span class="muscle-pill">Предплечья</span><span class="muscle-pill">Корпус</span></div>
+                </div>
+                <div class="instructions">
+                    <div class="instructions-title">📋 Техника выполнения</div>
+                    <ol class="instructions-list"><li>Висните на перекладине, хват шире плеч, ладони от себя</li><li>На выдохе подтяните тело вверх, подбородок выше перекладины</li><li>Лопатки сведите вместе в верхней точке, грудь вперёд</li><li>На вдохе медленно опуститесь вниз до полного вывиса</li><li>Контролируйте движение, не раскачивайтесь корпусом</li></ol>
+                </div>
+                <div class="tips-box">
+                    <div class="tips-title">💡 Ключевые моменты</div>
+                    <ul class="tips-list"><li>Полная амплитуда — ключ к росту широчайших</li><li>Если не получается — используйте резинку или тренажёр с помощью</li></ul>
+                </div>
+                <div class="sets-tracker" data-exercise="1">
+                    <div class="sets-title">✅ Отметить подходы</div>
+                    <div class="sets-row" id="sets-row-1">
+                        <label class="set-check" onclick="toggleSet(this,'1',0)"><input type="checkbox" data-set="0"><div class="set-box"></div><span class="set-label">Подход 1</span><input type="text" class="set-weight" placeholder="кг" data-weight="0" onchange="saveWeight('1',0,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'1',1)"><input type="checkbox" data-set="1"><div class="set-box"></div><span class="set-label">Подход 2</span><input type="text" class="set-weight" placeholder="кг" data-weight="1" onchange="saveWeight('1',1,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'1',2)"><input type="checkbox" data-set="2"><div class="set-box"></div><span class="set-label">Подход 3</span><input type="text" class="set-weight" placeholder="кг" data-weight="2" onchange="saveWeight('1',2,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'1',3)"><input type="checkbox" data-set="3"><div class="set-box"></div><span class="set-label">Подход 4</span><input type="text" class="set-weight" placeholder="кг" data-weight="3" onchange="saveWeight('1',3,this.value)" onclick="event.stopPropagation()"></label>
+                        <button class="rest-btn-inline" onclick="startRestTimer(event,90)">⏱️ Отдых 90с</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="exercise-card">
+        <div class="exercise-header" data-exercise="2">
+            <div class="exercise-main">
+                <div class="exercise-number">2</div>
+                <div class="exercise-name">Тяга гантелей в наклоне<span class="difficulty-badge difficulty-medium">Среднее</span></div>
+            </div>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="exercise-body" id="ex-2">
+            <div class="exercise-inner">
+                <div class="gif-box"><img src="https://kimi-web-img.moonshot.cn/img/gymvisual.com/d1c5501fe3c1553a1bf19a71bee954c1f2e602b9.gif" alt="Тяга гантелей"></div>
+                <div class="info-grid">
+                    <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">4</div></div>
+                    <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">10-12</div></div>
+                </div>
+                <div class="muscles-section">
+                    <div class="muscles-title">💪 Задействованные мышцы</div>
+                    <div class="muscles-list"><span class="muscle-pill primary">Широчайшие</span><span class="muscle-pill primary">Ромбовидные</span><span class="muscle-pill primary">Средняя трапеция</span><span class="muscle-pill">Задняя дельта</span><span class="muscle-pill">Бицепс</span><span class="muscle-pill">Разгибатели спины</span><span class="muscle-pill">Предплечья</span></div>
+                </div>
+                <div class="instructions">
+                    <div class="instructions-title">📋 Техника выполнения</div>
+                    <ol class="instructions-list"><li>Встаньте, ноги на ширине плеч, гантели в руках прямым хватом</li><li>Наклонитесь корпусом вперёд на 45°, спина прямая, чуть согните колени</li><li>Тяните гантели к поясу, локти ведите вдоль корпуса вверх</li><li>В верхней точке сведите лопатки, задержитесь на 1 секунду</li><li>Медленно опустите гантели вниз, растягивая мышцы спины</li></ol>
+                </div>
+                <div class="tips-box">
+                    <div class="tips-title">💡 Ключевые моменты</div>
+                    <ul class="tips-list"><li>Не округляйте спину — это травмоопасно</li><li>Тяните локтями, а не руками — так больше работает спина</li></ul>
+                </div>
+                <div class="sets-tracker" data-exercise="2">
+                    <div class="sets-title">✅ Отметить подходы</div>
+                    <div class="sets-row" id="sets-row-2">
+                        <label class="set-check" onclick="toggleSet(this,'2',0)"><input type="checkbox" data-set="0"><div class="set-box"></div><span class="set-label">Подход 1</span><input type="text" class="set-weight" placeholder="кг" data-weight="0" onchange="saveWeight('2',0,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'2',1)"><input type="checkbox" data-set="1"><div class="set-box"></div><span class="set-label">Подход 2</span><input type="text" class="set-weight" placeholder="кг" data-weight="1" onchange="saveWeight('2',1,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'2',2)"><input type="checkbox" data-set="2"><div class="set-box"></div><span class="set-label">Подход 3</span><input type="text" class="set-weight" placeholder="кг" data-weight="2" onchange="saveWeight('2',2,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'2',3)"><input type="checkbox" data-set="3"><div class="set-box"></div><span class="set-label">Подход 4</span><input type="text" class="set-weight" placeholder="кг" data-weight="3" onchange="saveWeight('2',3,this.value)" onclick="event.stopPropagation()"></label>
+                        <button class="rest-btn-inline" onclick="startRestTimer(event,90)">⏱️ Отдых 90с</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="exercise-card">
+        <div class="exercise-header" data-exercise="3">
+            <div class="exercise-main">
+                <div class="exercise-number">3</div>
+                <div class="exercise-name">Тяга гантели одной рукой<span class="difficulty-badge difficulty-medium">Среднее</span></div>
+            </div>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="exercise-body" id="ex-3">
+            <div class="exercise-inner">
+                <div class="gif-box"><img src="https://kimi-web-img.moonshot.cn/img/fitnessvolt.com/a69d89943dac98283d54331c8d0119cb161efdf8.gif" alt="Тяга одной рукой"></div>
+                <div class="info-grid">
+                    <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">3</div></div>
+                    <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">12</div></div>
+                </div>
+                <div class="muscles-section">
+                    <div class="muscles-title">💪 Задействованные мышцы</div>
+                    <div class="muscles-list"><span class="muscle-pill primary">Широчайшие</span><span class="muscle-pill primary">Ромбовидные</span><span class="muscle-pill">Трапеции</span><span class="muscle-pill">Бицепс</span><span class="muscle-pill">Предплечья</span><span class="muscle-pill">Корпус</span></div>
+                </div>
+                <div class="instructions">
+                    <div class="instructions-title">📋 Техника выполнения</div>
+                    <ol class="instructions-list"><li>Встаньте в выпад, одной рукой упритесь в скамью, другая — с гантелью</li><li>Спина параллельна полу, корпус зафиксирован, смотрите в пол</li><li>Тяните гантель к поясу, локоть идёт вверх вдоль корпуса</li><li>В верхней точке максимально сведите лопатку</li><li>Медленно опустите гантель вниз до полного растяжения</li></ol>
+                </div>
+                <div class="tips-box">
+                    <div class="tips-title">💡 Ключевые моменты</div>
+                    <ul class="tips-list"><li>Не поворачивайте корпус — работает только одна сторона</li><li>Чередуйте руки: сначала все подходы на одну, потом на другую</li></ul>
+                </div>
+                <div class="sets-tracker" data-exercise="3">
+                    <div class="sets-title">✅ Отметить подходы</div>
+                    <div class="sets-row" id="sets-row-3">
+                        <label class="set-check" onclick="toggleSet(this,'3',0)"><input type="checkbox" data-set="0"><div class="set-box"></div><span class="set-label">Подход 1</span><input type="text" class="set-weight" placeholder="кг" data-weight="0" onchange="saveWeight('3',0,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'3',1)"><input type="checkbox" data-set="1"><div class="set-box"></div><span class="set-label">Подход 2</span><input type="text" class="set-weight" placeholder="кг" data-weight="1" onchange="saveWeight('3',1,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'3',2)"><input type="checkbox" data-set="2"><div class="set-box"></div><span class="set-label">Подход 3</span><input type="text" class="set-weight" placeholder="кг" data-weight="2" onchange="saveWeight('3',2,this.value)" onclick="event.stopPropagation()"></label>
+                        <button class="rest-btn-inline" onclick="startRestTimer(event,90)">⏱️ Отдых 90с</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="exercise-card">
+        <div class="exercise-header" data-exercise="4">
+            <div class="exercise-main">
+                <div class="exercise-number">4</div>
+                <div class="exercise-name">Сгибание гантелей на бицепс<span class="difficulty-badge difficulty-medium">Среднее</span></div>
+            </div>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="exercise-body" id="ex-4">
+            <div class="exercise-inner">
+                <div class="gif-box"><img src="https://kimi-web-img.moonshot.cn/img/media.tenor.com/7a67217ef93de7935ce36e245a938bafd7f900cd.gif" alt="Сгибание на бицепс"></div>
+                <div class="info-grid">
+                    <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">4</div></div>
+                    <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">10-12</div></div>
+                </div>
+                <div class="muscles-section">
+                    <div class="muscles-title">💪 Задействованные мышцы</div>
+                    <div class="muscles-list"><span class="muscle-pill primary">Бицепс (двуглавая)</span><span class="muscle-pill">Брахиалис</span><span class="muscle-pill">Предплечья</span><span class="muscle-pill">Передняя дельта</span></div>
+                </div>
+                <div class="instructions">
+                    <div class="instructions-title">📋 Техника выполнения</div>
+                    <ol class="instructions-list"><li>Встаньте прямо, гантели в руках, ладони от себя, руки вдоль корпуса</li><li>Прижмите локти к корпусу и не отводите их во время движения</li><li>На выдохе сгибайте руки, поднимая гантели к плечам</li><li>В верхней точке сожмите бицепс на 1-2 секунды</li><li>На вдохе медленно опустите гантели, контролируя негативную фазу</li></ol>
+                </div>
+                <div class="tips-box">
+                    <div class="tips-title">💡 Ключевые моменты</div>
+                    <ul class="tips-list"><li>Не раскачивайте корпус — читинг исключает бицепс из работы</li><li>Полное опускание = полное растяжение бицепса</li></ul>
+                </div>
+                <div class="sets-tracker" data-exercise="4">
+                    <div class="sets-title">✅ Отметить подходы</div>
+                    <div class="sets-row" id="sets-row-4">
+                        <label class="set-check" onclick="toggleSet(this,'4',0)"><input type="checkbox" data-set="0"><div class="set-box"></div><span class="set-label">Подход 1</span><input type="text" class="set-weight" placeholder="кг" data-weight="0" onchange="saveWeight('4',0,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'4',1)"><input type="checkbox" data-set="1"><div class="set-box"></div><span class="set-label">Подход 2</span><input type="text" class="set-weight" placeholder="кг" data-weight="1" onchange="saveWeight('4',1,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'4',2)"><input type="checkbox" data-set="2"><div class="set-box"></div><span class="set-label">Подход 3</span><input type="text" class="set-weight" placeholder="кг" data-weight="2" onchange="saveWeight('4',2,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'4',3)"><input type="checkbox" data-set="3"><div class="set-box"></div><span class="set-label">Подход 4</span><input type="text" class="set-weight" placeholder="кг" data-weight="3" onchange="saveWeight('4',3,this.value)" onclick="event.stopPropagation()"></label>
+                        <button class="rest-btn-inline" onclick="startRestTimer(event,90)">⏱️ Отдых 90с</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="exercise-card">
+        <div class="exercise-header" data-exercise="5">
+            <div class="exercise-main">
+                <div class="exercise-number">5</div>
+                <div class="exercise-name">Молотки с гантелями<span class="difficulty-badge difficulty-easy">Лёгкое</span></div>
+            </div>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="exercise-body" id="ex-5">
+            <div class="exercise-inner">
+                <div class="gif-box"><img src="https://kimi-web-img.moonshot.cn/img/fitnessprogramer.com/dbf9cd4bb78fa286e5b96aceeac7339a73fe8c8a.gif" alt="Молотки"></div>
+                <div class="info-grid">
+                    <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">3</div></div>
+                    <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">12</div></div>
+                </div>
+                <div class="muscles-section">
+                    <div class="muscles-title">💪 Задействованные мышцы</div>
+                    <div class="muscles-list"><span class="muscle-pill primary">Брахиалис</span><span class="muscle-pill primary">Бицепс</span><span class="muscle-pill">Предплечья</span><span class="muscle-pill">Плечелучевая</span></div>
+                </div>
+                <div class="instructions">
+                    <div class="instructions-title">📋 Техника выполнения</div>
+                    <ol class="instructions-list"><li>Встаньте прямо, гантели в руках, ладони повернуты друг к другу (нейтральный хват)</li><li>Прижмите локти к корпусу, плечи неподвижны</li><li>На выдохе поднимайте гантели к плечам, сохраняя нейтральный хват</li><li>В верхней точке задержитесь и сожмите мышцы</li><li>Медленно опустите гантели вниз до полного выпрямления рук</li></ol>
+                </div>
+                <div class="tips-box">
+                    <div class="tips-title">💡 Ключевые моменты</div>
+                    <ul class="tips-list"><li>Нейтральный хват лучше нагружает брахиалис и предплечья</li><li>Движение похоже на удары молотком — отсюда название</li></ul>
+                </div>
+                <div class="sets-tracker" data-exercise="5">
+                    <div class="sets-title">✅ Отметить подходы</div>
+                    <div class="sets-row" id="sets-row-5">
+                        <label class="set-check" onclick="toggleSet(this,'5',0)"><input type="checkbox" data-set="0"><div class="set-box"></div><span class="set-label">Подход 1</span><input type="text" class="set-weight" placeholder="кг" data-weight="0" onchange="saveWeight('5',0,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'5',1)"><input type="checkbox" data-set="1"><div class="set-box"></div><span class="set-label">Подход 2</span><input type="text" class="set-weight" placeholder="кг" data-weight="1" onchange="saveWeight('5',1,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'5',2)"><input type="checkbox" data-set="2"><div class="set-box"></div><span class="set-label">Подход 3</span><input type="text" class="set-weight" placeholder="кг" data-weight="2" onchange="saveWeight('5',2,this.value)" onclick="event.stopPropagation()"></label>
+                        <button class="rest-btn-inline" onclick="startRestTimer(event,90)">⏱️ Отдых 90с</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="exercise-card">
+        <div class="exercise-header" data-exercise="6">
+            <div class="exercise-main">
+                <div class="exercise-number">6</div>
+                <div class="exercise-name">Планка<span class="difficulty-badge difficulty-medium">Среднее</span></div>
+            </div>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="exercise-body" id="ex-6">
+            <div class="exercise-inner">
+                <div class="gif-box"><img src="https://kimi-web-img.moonshot.cn/img/media.tenor.com/5b7cd09f45793553e18b21a0e404976e7555ac4f.gif" alt="Планка"></div>
+                <div class="info-grid">
+                    <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">3</div></div>
+                    <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">45-60 сек</div></div>
+                </div>
+                <div class="muscles-section">
+                    <div class="muscles-title">💪 Задействованные мышцы</div>
+                    <div class="muscles-list"><span class="muscle-pill primary">Прямая мышца живота</span><span class="muscle-pill primary">Косые мышцы</span><span class="muscle-pill">Поперечная мышца</span><span class="muscle-pill">Разгибатели спины</span><span class="muscle-pill">Ягодицы</span><span class="muscle-pill">Квадрицепс</span></div>
+                </div>
+                <div class="instructions">
+                    <div class="instructions-title">📋 Техника выполнения</div>
+                    <ol class="instructions-list"><li>Примите упор лёжа на предплечья, локти под плечевыми суставами</li><li>Тело образует прямую линию от головы до пяток — не провисайте поясницей</li><li>Напрягите пресс и ягодицы, живот втянут</li><li>Дышите ровно, не задерживайте дыхание</li><li>Удерживайте позицию заданное время, не опуская бёдра</li></ol>
+                </div>
+                <div class="tips-box">
+                    <div class="tips-title">💡 Ключевые моменты</div>
+                    <ul class="tips-list"><li>Если поясница провисает — опустите колени, но сохраните прямую спину</li><li>Время удержания растите постепенно</li></ul>
+                </div>
+                <div class="sets-tracker" data-exercise="6">
+                    <div class="sets-title">✅ Отметить подходы</div>
+                    <div class="sets-row" id="sets-row-6">
+                        <label class="set-check" onclick="toggleSet(this,'6',0)"><input type="checkbox" data-set="0"><div class="set-box"></div><span class="set-label">Подход 1</span><input type="text" class="set-weight" placeholder="кг" data-weight="0" onchange="saveWeight('6',0,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'6',1)"><input type="checkbox" data-set="1"><div class="set-box"></div><span class="set-label">Подход 2</span><input type="text" class="set-weight" placeholder="кг" data-weight="1" onchange="saveWeight('6',1,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'6',2)"><input type="checkbox" data-set="2"><div class="set-box"></div><span class="set-label">Подход 3</span><input type="text" class="set-weight" placeholder="кг" data-weight="2" onchange="saveWeight('6',2,this.value)" onclick="event.stopPropagation()"></label>
+                        <button class="rest-btn-inline" onclick="startRestTimer(event,90)">⏱️ Отдых 90с</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="day-tips">
+        <div class="tips-title">💡 Советы дня А</div>
+        <ul class="tips-list">
+            <li>Начинайте с базовых многосуставных упражнений (подтягивания, тяга)</li>
+            <li>Бицепс — вспомогательная группа, не берите слишком тяжёлый вес</li>
+            <li>Между подходами отдыхайте 90-120 секунд</li>
+            <li>Планку делайте в конце тренировки как финишное упражнение</li>
+        </ul>
+    </div>
+</div>
+
+<div id="day-B" class="day-content">
+    <div class="day-header">
+        <div class="day-title">📅 День Б — Среда</div>
+        <div class="day-subtitle">Грудь + Трицепс + Пресс</div>
+        <div class="muscle-tags">
+            <span class="muscle-tag">Грудные</span>
+            <span class="muscle-tag">Трицепс</span>
+            <span class="muscle-tag">Передняя дельта</span>
+            <span class="muscle-tag">Пресс</span>
+        </div>
+    </div>
+    <div class="exercise-card">
+        <div class="exercise-header" data-exercise="7">
+            <div class="exercise-main">
+                <div class="exercise-number">7</div>
+                <div class="exercise-name">Отжимания классические<span class="difficulty-badge difficulty-medium">Среднее</span></div>
+            </div>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="exercise-body" id="ex-7">
+            <div class="exercise-inner">
+                <div class="gif-box"><img src="https://kimi-web-img.moonshot.cn/img/www.mitrecsports.com/456c68b8fdd18b16876ca16ad5d3c82a73821fed.gif" alt="Отжимания"></div>
+                <div class="info-grid">
+                    <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">4</div></div>
+                    <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">MAX</div></div>
+                </div>
+                <div class="muscles-section">
+                    <div class="muscles-title">💪 Задействованные мышцы</div>
+                    <div class="muscles-list"><span class="muscle-pill primary">Грудные (средняя часть)</span><span class="muscle-pill primary">Трицепс</span><span class="muscle-pill">Передняя дельта</span><span class="muscle-pill">Корпус</span><span class="muscle-pill">Предплечья</span></div>
+                </div>
+                <div class="instructions">
+                    <div class="instructions-title">📋 Техника выполнения</div>
+                    <ol class="instructions-list"><li>Примите упор лёжа, руки на ширине плеч, тело — прямая линия</li><li>На вдохе опустите тело, сгибая локти примерно на 90°</li><li>Локти идут в стороны под углом ~45° к корпусу, не расползайте</li><li>На выдохе отожмитесь вверх до полного выпрямления рук</li><li>В верхней точке сведите лопатки и напрягите грудь</li></ol>
+                </div>
+                <div class="tips-box">
+                    <div class="tips-title">💡 Ключевые моменты</div>
+                    <ul class="tips-list"><li>Если сложно — опустите колени, но сохраните прямую спину</li><li>Грудь почти касается пола — полная амплитуда</li></ul>
+                </div>
+                <div class="sets-tracker" data-exercise="7">
+                    <div class="sets-title">✅ Отметить подходы</div>
+                    <div class="sets-row" id="sets-row-7">
+                        <label class="set-check" onclick="toggleSet(this,'7',0)"><input type="checkbox" data-set="0"><div class="set-box"></div><span class="set-label">Подход 1</span><input type="text" class="set-weight" placeholder="кг" data-weight="0" onchange="saveWeight('7',0,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'7',1)"><input type="checkbox" data-set="1"><div class="set-box"></div><span class="set-label">Подход 2</span><input type="text" class="set-weight" placeholder="кг" data-weight="1" onchange="saveWeight('7',1,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'7',2)"><input type="checkbox" data-set="2"><div class="set-box"></div><span class="set-label">Подход 3</span><input type="text" class="set-weight" placeholder="кг" data-weight="2" onchange="saveWeight('7',2,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'7',3)"><input type="checkbox" data-set="3"><div class="set-box"></div><span class="set-label">Подход 4</span><input type="text" class="set-weight" placeholder="кг" data-weight="3" onchange="saveWeight('7',3,this.value)" onclick="event.stopPropagation()"></label>
+                        <button class="rest-btn-inline" onclick="startRestTimer(event,90)">⏱️ Отдых 90с</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="exercise-card">
+        <div class="exercise-header" data-exercise="8">
+            <div class="exercise-main">
+                <div class="exercise-number">8</div>
+                <div class="exercise-name">Жим гантелей лёжа<span class="difficulty-badge difficulty-hard">Сложное</span></div>
+            </div>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="exercise-body" id="ex-8">
+            <div class="exercise-inner">
+                <div class="gif-box"><img src="https://kimi-web-img.moonshot.cn/img/cdn.jefit.com/c7ff6c7702c7b0784bb591d27c2fc4547b3fa492.gif" alt="Жим гантелей"></div>
+                <div class="info-grid">
+                    <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">4</div></div>
+                    <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">10-12</div></div>
+                </div>
+                <div class="muscles-section">
+                    <div class="muscles-title">💪 Задействованные мышцы</div>
+                    <div class="muscles-list"><span class="muscle-pill primary">Грудные (верх и середина)</span><span class="muscle-pill primary">Передняя дельта</span><span class="muscle-pill">Трицепс</span><span class="muscle-pill">Корпус</span><span class="muscle-pill">Предплечья</span></div>
+                </div>
+                <div class="instructions">
+                    <div class="instructions-title">📋 Техника выполнения</div>
+                    <ol class="instructions-list"><li>Лягте на скамью, гантели у груди, локти согнуты под ~75°</li><li>На выдохе выжмите гантели вверх, сводя их над грудной клеткой</li><li>В верхней точке гантели не сталкиваются — оставьте 5-10 см</li><li>На вдохе медленно опустите гантели, чувствуя растяжение груди</li><li>Локти не опускайте ниже уровня тела — это травмоопасно</li></ol>
+                </div>
+                <div class="tips-box">
+                    <div class="tips-title">💡 Ключевые моменты</div>
+                    <ul class="tips-list"><li>Гантели дают большую амплитуду, чем штанга — используйте это</li><li>Следите, чтобы запястья оставались прямыми</li></ul>
+                </div>
+                <div class="sets-tracker" data-exercise="8">
+                    <div class="sets-title">✅ Отметить подходы</div>
+                    <div class="sets-row" id="sets-row-8">
+                        <label class="set-check" onclick="toggleSet(this,'8',0)"><input type="checkbox" data-set="0"><div class="set-box"></div><span class="set-label">Подход 1</span><input type="text" class="set-weight" placeholder="кг" data-weight="0" onchange="saveWeight('8',0,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'8',1)"><input type="checkbox" data-set="1"><div class="set-box"></div><span class="set-label">Подход 2</span><input type="text" class="set-weight" placeholder="кг" data-weight="1" onchange="saveWeight('8',1,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'8',2)"><input type="checkbox" data-set="2"><div class="set-box"></div><span class="set-label">Подход 3</span><input type="text" class="set-weight" placeholder="кг" data-weight="2" onchange="saveWeight('8',2,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'8',3)"><input type="checkbox" data-set="3"><div class="set-box"></div><span class="set-label">Подход 4</span><input type="text" class="set-weight" placeholder="кг" data-weight="3" onchange="saveWeight('8',3,this.value)" onclick="event.stopPropagation()"></label>
+                        <button class="rest-btn-inline" onclick="startRestTimer(event,90)">⏱️ Отдых 90с</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="exercise-card">
+        <div class="exercise-header" data-exercise="9">
+            <div class="exercise-main">
+                <div class="exercise-number">9</div>
+                <div class="exercise-name">Разведение гантелей лёжа<span class="difficulty-badge difficulty-medium">Среднее</span></div>
+            </div>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="exercise-body" id="ex-9">
+            <div class="exercise-inner">
+                <div class="gif-box"><img src="https://kimi-web-img.moonshot.cn/img/gymvisual.com/59dc73937662ab45d931cae8b766a5b9e3bbcbc4.gif" alt="Разведение"></div>
+                <div class="info-grid">
+                    <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">3</div></div>
+                    <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">12</div></div>
+                </div>
+                <div class="muscles-section">
+                    <div class="muscles-title">💪 Задействованные мышцы</div>
+                    <div class="muscles-list"><span class="muscle-pill primary">Грудные (наружные волокна)</span><span class="muscle-pill">Передняя дельта</span><span class="muscle-pill">Бицепс (стабилизация)</span></div>
+                </div>
+                <div class="instructions">
+                    <div class="instructions-title">📋 Техника выполнения</div>
+                    <ol class="instructions-list"><li>Лягте на скамью, гантели над грудью, ладони друг к другу</li><li>Слегка согните локти — они остаются в этом положении на всё движение</li><li>На вдохе медленно разведите руки в стороны, растягивая грудь</li><li>Опустите гантели до уровня груди, не ниже — чувствуйте растяжение</li><li>На выдохе сведите руки вверх, сжимая грудные мышцы</li></ol>
+                </div>
+                <div class="tips-box">
+                    <div class="tips-title">💡 Ключевые моменты</div>
+                    <ul class="tips-list"><li>Это изолирующее упражнение — вес должен быть меньше, чем в жиме</li><li>Представьте, что обнимаете большое дерево — такая дуга движения</li></ul>
+                </div>
+                <div class="sets-tracker" data-exercise="9">
+                    <div class="sets-title">✅ Отметить подходы</div>
+                    <div class="sets-row" id="sets-row-9">
+                        <label class="set-check" onclick="toggleSet(this,'9',0)"><input type="checkbox" data-set="0"><div class="set-box"></div><span class="set-label">Подход 1</span><input type="text" class="set-weight" placeholder="кг" data-weight="0" onchange="saveWeight('9',0,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'9',1)"><input type="checkbox" data-set="1"><div class="set-box"></div><span class="set-label">Подход 2</span><input type="text" class="set-weight" placeholder="кг" data-weight="1" onchange="saveWeight('9',1,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'9',2)"><input type="checkbox" data-set="2"><div class="set-box"></div><span class="set-label">Подход 3</span><input type="text" class="set-weight" placeholder="кг" data-weight="2" onchange="saveWeight('9',2,this.value)" onclick="event.stopPropagation()"></label>
+                        <button class="rest-btn-inline" onclick="startRestTimer(event,90)">⏱️ Отдых 90с</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="exercise-card">
+        <div class="exercise-header" data-exercise="10">
+            <div class="exercise-main">
+                <div class="exercise-number">10</div>
+                <div class="exercise-name">Отжимания узким хватом<span class="difficulty-badge difficulty-hard">Сложное</span></div>
+            </div>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="exercise-body" id="ex-10">
+            <div class="exercise-inner">
+                <div class="gif-box"><img src="https://kimi-web-img.moonshot.cn/img/newlife.com.cy/81bdf96006a91f14993a08626ef3c144acd93b80.gif" alt="Отжимания узким хватом"></div>
+                <div class="info-grid">
+                    <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">3</div></div>
+                    <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">10-12</div></div>
+                </div>
+                <div class="muscles-section">
+                    <div class="muscles-title">💪 Задействованные мышцы</div>
+                    <div class="muscles-list"><span class="muscle-pill primary">Трицепс (все 3 головки)</span><span class="muscle-pill">Грудь (внутренняя часть)</span><span class="muscle-pill">Передняя дельта</span><span class="muscle-pill">Корпус</span></div>
+                </div>
+                <div class="instructions">
+                    <div class="instructions-title">📋 Техника выполнения</div>
+                    <ol class="instructions-list"><li>Примите упор лёжа, руки под плечами или уже — на ширине 10-15 см</li><li>Локти прижаты к корпусу на всём протяжении движения</li><li>На вдохе опустите тело, сгибая локти — они идут назад, не в стороны</li><li>На выдохе отожмитесь, полностью выпрямляя руки и напрягая трицепс</li><li>Тело — прямая линия, не прогибайте поясницу и не поднимайте ягодицы</li></ol>
+                </div>
+                <div class="tips-box">
+                    <div class="tips-title">💡 Ключевые моменты</div>
+                    <ul class="tips-list"><li>Чем уже хват — тем больше трицепс, но не ставьте руки совсем вместе (травмоопасно для запястий)</li><li>Если сложно — делайте с колен</li></ul>
+                </div>
+                <div class="sets-tracker" data-exercise="10">
+                    <div class="sets-title">✅ Отметить подходы</div>
+                    <div class="sets-row" id="sets-row-10">
+                        <label class="set-check" onclick="toggleSet(this,'10',0)"><input type="checkbox" data-set="0"><div class="set-box"></div><span class="set-label">Подход 1</span><input type="text" class="set-weight" placeholder="кг" data-weight="0" onchange="saveWeight('10',0,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'10',1)"><input type="checkbox" data-set="1"><div class="set-box"></div><span class="set-label">Подход 2</span><input type="text" class="set-weight" placeholder="кг" data-weight="1" onchange="saveWeight('10',1,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'10',2)"><input type="checkbox" data-set="2"><div class="set-box"></div><span class="set-label">Подход 3</span><input type="text" class="set-weight" placeholder="кг" data-weight="2" onchange="saveWeight('10',2,this.value)" onclick="event.stopPropagation()"></label>
+                        <button class="rest-btn-inline" onclick="startRestTimer(event,90)">⏱️ Отдых 90с</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="exercise-card">
+        <div class="exercise-header" data-exercise="11">
+            <div class="exercise-main">
+                <div class="exercise-number">11</div>
+                <div class="exercise-name">Французский жим лёжа<span class="difficulty-badge difficulty-medium">Среднее</span></div>
+            </div>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="exercise-body" id="ex-11">
+            <div class="exercise-inner">
+                <div class="gif-box"><img src="https://kimi-web-img.moonshot.cn/img/gymvisual.com/c76b9c86f09015e584e309862632f6019d741219.gif" alt="Французский жим"></div>
+                <div class="info-grid">
+                    <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">3</div></div>
+                    <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">12</div></div>
+                </div>
+                <div class="muscles-section">
+                    <div class="muscles-title">💪 Задействованные мышцы</div>
+                    <div class="muscles-list"><span class="muscle-pill primary">Трицепс (длинная головка)</span><span class="muscle-pill">Трицепс (латеральная и медиальная)</span><span class="muscle-pill">Передняя дельта</span></div>
+                </div>
+                <div class="instructions">
+                    <div class="instructions-title">📋 Техника выполнения</div>
+                    <ol class="instructions-list"><li>Лягте на скамью, гантель или штанга над грудью, руки прямые</li><li>На вдохе медленно опустите снаряд за голову, сгибая локти</li><li>Локти не разводятся в стороны — они указывают вперёд/вверх</li><li>Опустите до уровня, когда предплечья касаются скамьи или чуть ниже</li><li>На выдохе разогните руки, возвращая снаряд в исходное положение</li></ol>
+                </div>
+                <div class="tips-box">
+                    <div class="tips-title">💡 Ключевые моменты</div>
+                    <ul class="tips-list"><li>Локти — ключ к технике: если разводятся, нагрузка уходит с трицепса</li><li>Начинайте с лёгкого веса, чтобы отработать технику</li></ul>
+                </div>
+                <div class="sets-tracker" data-exercise="11">
+                    <div class="sets-title">✅ Отметить подходы</div>
+                    <div class="sets-row" id="sets-row-11">
+                        <label class="set-check" onclick="toggleSet(this,'11',0)"><input type="checkbox" data-set="0"><div class="set-box"></div><span class="set-label">Подход 1</span><input type="text" class="set-weight" placeholder="кг" data-weight="0" onchange="saveWeight('11',0,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'11',1)"><input type="checkbox" data-set="1"><div class="set-box"></div><span class="set-label">Подход 2</span><input type="text" class="set-weight" placeholder="кг" data-weight="1" onchange="saveWeight('11',1,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'11',2)"><input type="checkbox" data-set="2"><div class="set-box"></div><span class="set-label">Подход 3</span><input type="text" class="set-weight" placeholder="кг" data-weight="2" onchange="saveWeight('11',2,this.value)" onclick="event.stopPropagation()"></label>
+                        <button class="rest-btn-inline" onclick="startRestTimer(event,90)">⏱️ Отдых 90с</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="exercise-card">
+        <div class="exercise-header" data-exercise="12">
+            <div class="exercise-main">
+                <div class="exercise-number">12</div>
+                <div class="exercise-name">Скручивания на пресс<span class="difficulty-badge difficulty-easy">Лёгкое</span></div>
+            </div>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="exercise-body" id="ex-12">
+            <div class="exercise-inner">
+                <div class="gif-box"><img src="https://kimi-web-img.moonshot.cn/img/media.gq.com/9f941f44de3d17c2beb2cb53b6ad543761cf0539.gif" alt="Скручивания"></div>
+                <div class="info-grid">
+                    <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">4</div></div>
+                    <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">20</div></div>
+                </div>
+                <div class="muscles-section">
+                    <div class="muscles-title">💪 Задействованные мышцы</div>
+                    <div class="muscles-list"><span class="muscle-pill primary">Прямая мышца живота</span><span class="muscle-pill">Косые мышцы</span><span class="muscle-pill">Поперечная мышца</span><span class="muscle-pill">Поясничные мышцы</span></div>
+                </div>
+                <div class="instructions">
+                    <div class="instructions-title">📋 Техника выполнения</div>
+                    <ol class="instructions-list"><li>Лягте на спину, колени согнуты, стопы на полу, руки за головой или на груди</li><li>На выдохе скручивайте корпус, отрывая лопатки от пола</li><li>Тянитесь подбородком к груди, не к коленям — это подъём корпуса, не наклон</li><li>В верхней точке задержитесь на 1-2 секунды и сожмите пресс</li><li>На вдохе медленно опустите корпус, но не расслабляйте полностью</li></ol>
+                </div>
+                <div class="tips-box">
+                    <div class="tips-title">💡 Ключевые моменты</div>
+                    <ul class="tips-list"><li>Не тяните голову руками — это нагружает шею</li><li>Дышите: выдох на усилие, вдох на опускание</li></ul>
+                </div>
+                <div class="sets-tracker" data-exercise="12">
+                    <div class="sets-title">✅ Отметить подходы</div>
+                    <div class="sets-row" id="sets-row-12">
+                        <label class="set-check" onclick="toggleSet(this,'12',0)"><input type="checkbox" data-set="0"><div class="set-box"></div><span class="set-label">Подход 1</span><input type="text" class="set-weight" placeholder="кг" data-weight="0" onchange="saveWeight('12',0,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'12',1)"><input type="checkbox" data-set="1"><div class="set-box"></div><span class="set-label">Подход 2</span><input type="text" class="set-weight" placeholder="кг" data-weight="1" onchange="saveWeight('12',1,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'12',2)"><input type="checkbox" data-set="2"><div class="set-box"></div><span class="set-label">Подход 3</span><input type="text" class="set-weight" placeholder="кг" data-weight="2" onchange="saveWeight('12',2,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'12',3)"><input type="checkbox" data-set="3"><div class="set-box"></div><span class="set-label">Подход 4</span><input type="text" class="set-weight" placeholder="кг" data-weight="3" onchange="saveWeight('12',3,this.value)" onclick="event.stopPropagation()"></label>
+                        <button class="rest-btn-inline" onclick="startRestTimer(event,90)">⏱️ Отдых 90с</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="day-tips">
+        <div class="tips-title">💡 Советы дня Б</div>
+        <ul class="tips-list">
+            <li>Грудь — большая мышечная группа, давайте ей достаточный объём</li>
+            <li>Трицепс — 2/3 объёма руки, не пренебрегайте его тренировкой</li>
+            <li>Отдых между подходами 60-90 секунд для груди, 45-60 для трицепса</li>
+            <li>Скручивания делайте в темпе, без рывков — контроль важнее скорости</li>
+        </ul>
+    </div>
+</div>
+
+<div id="day-V" class="day-content">
+    <div class="day-header">
+        <div class="day-title">📅 День В — Пятница</div>
+        <div class="day-subtitle">Ноги + Плечи + Шея + Пресс</div>
+        <div class="muscle-tags">
+            <span class="muscle-tag">Квадрицепс</span>
+            <span class="muscle-tag">Бицепс бедра</span>
+            <span class="muscle-tag">Ягодицы</span>
+            <span class="muscle-tag">Дельты</span>
+            <span class="muscle-tag">Шея</span>
+        </div>
+    </div>
+    <div class="exercise-card">
+        <div class="exercise-header" data-exercise="13">
+            <div class="exercise-main">
+                <div class="exercise-number">13</div>
+                <div class="exercise-name">Гоблет-приседания с гантелью<span class="difficulty-badge difficulty-medium">Среднее</span></div>
+            </div>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="exercise-body" id="ex-13">
+            <div class="exercise-inner">
+                <div class="gif-box"><img src="https://kimi-web-img.moonshot.cn/img/fitnessprogramer.com/340155880c9dd6b2b4aaeb485756ba21d798b6b9.gif" alt="Гоблет-приседания"></div>
+                <div class="info-grid">
+                    <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">4</div></div>
+                    <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">10-12</div></div>
+                </div>
+                <div class="muscles-section">
+                    <div class="muscles-title">💪 Задействованные мышцы</div>
+                    <div class="muscles-list"><span class="muscle-pill primary">Квадрицепс</span><span class="muscle-pill primary">Ягодицы</span><span class="muscle-pill">Бицепс бедра</span><span class="muscle-pill">Икры</span><span class="muscle-pill">Корпус</span><span class="muscle-pill">Разгибатели спины</span></div>
+                </div>
+                <div class="instructions">
+                    <div class="instructions-title">📋 Техника выполнения</div>
+                    <ol class="instructions-list"><li>Встаньте, ноги на ширине плеч, возьмите одну гантель обеими руками у груди (ладони под диском)</li><li>Локти прижаты к корпусу, гантель плотно у груди, спина прямая</li><li>На вдохе опуститесь вниз, сгибая колени и отводя таз назад</li><li>Приседьте до параллели бёдер с полом или чуть ниже, колени не заваливаются внутрь</li><li>На выдохе встаньте, напрягая квадрицепс и ягодицы в верхней точке</li></ol>
+                </div>
+                <div class="tips-box">
+                    <div class="tips-title">💡 Ключевые моменты</div>
+                    <ul class="tips-list"><li>Гоблет-приседания безопаснее для спины, чем со штангой — идеально для начинающих</li><li>Колени следуют за носками, не сходятся внутрь</li></ul>
+                </div>
+                <div class="sets-tracker" data-exercise="13">
+                    <div class="sets-title">✅ Отметить подходы</div>
+                    <div class="sets-row" id="sets-row-13">
+                        <label class="set-check" onclick="toggleSet(this,'13',0)"><input type="checkbox" data-set="0"><div class="set-box"></div><span class="set-label">Подход 1</span><input type="text" class="set-weight" placeholder="кг" data-weight="0" onchange="saveWeight('13',0,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'13',1)"><input type="checkbox" data-set="1"><div class="set-box"></div><span class="set-label">Подход 2</span><input type="text" class="set-weight" placeholder="кг" data-weight="1" onchange="saveWeight('13',1,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'13',2)"><input type="checkbox" data-set="2"><div class="set-box"></div><span class="set-label">Подход 3</span><input type="text" class="set-weight" placeholder="кг" data-weight="2" onchange="saveWeight('13',2,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'13',3)"><input type="checkbox" data-set="3"><div class="set-box"></div><span class="set-label">Подход 4</span><input type="text" class="set-weight" placeholder="кг" data-weight="3" onchange="saveWeight('13',3,this.value)" onclick="event.stopPropagation()"></label>
+                        <button class="rest-btn-inline" onclick="startRestTimer(event,90)">⏱️ Отдых 90с</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="exercise-card">
+        <div class="exercise-header" data-exercise="14">
+            <div class="exercise-main">
+                <div class="exercise-number">14</div>
+                <div class="exercise-name">Выпады с гантелями<span class="difficulty-badge difficulty-medium">Среднее</span></div>
+            </div>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="exercise-body" id="ex-14">
+            <div class="exercise-inner">
+                <div class="gif-box"><img src="https://kimi-web-img.moonshot.cn/img/cdn.jefit.com/9bbe1c3232ad76029f92ac0763c3e673964edd18.gif" alt="Выпады"></div>
+                <div class="info-grid">
+                    <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">3</div></div>
+                    <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">12 (на ногу)</div></div>
+                </div>
+                <div class="muscles-section">
+                    <div class="muscles-title">💪 Задействованные мышцы</div>
+                    <div class="muscles-list"><span class="muscle-pill primary">Квадрицепс</span><span class="muscle-pill primary">Ягодицы</span><span class="muscle-pill">Бицепс бедра</span><span class="muscle-pill">Икры</span><span class="muscle-pill">Корпус (стабилизация)</span></div>
+                </div>
+                <div class="instructions">
+                    <div class="instructions-title">📋 Техника выполнения</div>
+                    <ol class="instructions-list"><li>Встаньте прямо, гантели в руках, шагните одной ногой вперёд</li><li>Опустите таз, сгибая оба колена до угла ~90°</li><li>Заднее колено почти касается пола, передняя нога — вся стопа на полу</li><li>Толкнитесь передней ногой и вернитесь в исходное положение</li><li>Выполните все повторения на одну ногу, затем на другую</li></ol>
+                </div>
+                <div class="tips-box">
+                    <div class="tips-title">💡 Ключевые моменты</div>
+                    <ul class="tips-list"><li>Торс остаётся вертикальным — не наклоняйтесь вперёд</li><li>Шаг должен быть достаточно длинным, чтобы переднее колено не выходило за носок</li></ul>
+                </div>
+                <div class="sets-tracker" data-exercise="14">
+                    <div class="sets-title">✅ Отметить подходы</div>
+                    <div class="sets-row" id="sets-row-14">
+                        <label class="set-check" onclick="toggleSet(this,'14',0)"><input type="checkbox" data-set="0"><div class="set-box"></div><span class="set-label">Подход 1</span><input type="text" class="set-weight" placeholder="кг" data-weight="0" onchange="saveWeight('14',0,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'14',1)"><input type="checkbox" data-set="1"><div class="set-box"></div><span class="set-label">Подход 2</span><input type="text" class="set-weight" placeholder="кг" data-weight="1" onchange="saveWeight('14',1,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'14',2)"><input type="checkbox" data-set="2"><div class="set-box"></div><span class="set-label">Подход 3</span><input type="text" class="set-weight" placeholder="кг" data-weight="2" onchange="saveWeight('14',2,this.value)" onclick="event.stopPropagation()"></label>
+                        <button class="rest-btn-inline" onclick="startRestTimer(event,90)">⏱️ Отдых 90с</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="exercise-card">
+        <div class="exercise-header" data-exercise="15">
+            <div class="exercise-main">
+                <div class="exercise-number">15</div>
+                <div class="exercise-name">Ягодичный мостик лёжа<span class="difficulty-badge difficulty-easy">Лёгкое</span></div>
+            </div>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="exercise-body" id="ex-15">
+            <div class="exercise-inner">
+                <div class="gif-box"><img src="https://kimi-web-img.moonshot.cn/img/static.wixstatic.com/3dd3a5545cfb1ff38b71de674973205768609698.gif" alt="Мостик"></div>
+                <div class="info-grid">
+                    <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">3</div></div>
+                    <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">15</div></div>
+                </div>
+                <div class="muscles-section">
+                    <div class="muscles-title">💪 Задействованные мышцы</div>
+                    <div class="muscles-list"><span class="muscle-pill primary">Ягодицы (основные)</span><span class="muscle-pill primary">Бицепс бедра</span><span class="muscle-pill">Разгибатели спины</span><span class="muscle-pill">Пресс</span><span class="muscle-pill">Поясничные мышцы</span></div>
+                </div>
+                <div class="instructions">
+                    <div class="instructions-title">📋 Техника выполнения</div>
+                    <ol class="instructions-list"><li>Лягте на спину, колени согнуты, стопы на полу на ширине плеч, руки вдоль тела</li><li>На выдохе поднимайте таз вверх, напрягая ягодицы и отрывая таз от пола</li><li>В верхней точке тело образует прямую линию от плеч до колен</li><li>Задержитесь на 2-3 секунды, максимально сжав ягодицы</li><li>На вдохе медленно опустите таз, но не кладите его на пол — держите напряжение</li></ol>
+                </div>
+                <div class="tips-box">
+                    <div class="tips-title">💡 Ключевые моменты</div>
+                    <ul class="tips-list"><li>Не прогибайте поясницу вверх — напрягайте именно ягодицы</li><li>Для усложнения положите гантель на бёдра</li></ul>
+                </div>
+                <div class="sets-tracker" data-exercise="15">
+                    <div class="sets-title">✅ Отметить подходы</div>
+                    <div class="sets-row" id="sets-row-15">
+                        <label class="set-check" onclick="toggleSet(this,'15',0)"><input type="checkbox" data-set="0"><div class="set-box"></div><span class="set-label">Подход 1</span><input type="text" class="set-weight" placeholder="кг" data-weight="0" onchange="saveWeight('15',0,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'15',1)"><input type="checkbox" data-set="1"><div class="set-box"></div><span class="set-label">Подход 2</span><input type="text" class="set-weight" placeholder="кг" data-weight="1" onchange="saveWeight('15',1,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'15',2)"><input type="checkbox" data-set="2"><div class="set-box"></div><span class="set-label">Подход 3</span><input type="text" class="set-weight" placeholder="кг" data-weight="2" onchange="saveWeight('15',2,this.value)" onclick="event.stopPropagation()"></label>
+                        <button class="rest-btn-inline" onclick="startRestTimer(event,90)">⏱️ Отдых 90с</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="exercise-card">
+        <div class="exercise-header" data-exercise="16">
+            <div class="exercise-main">
+                <div class="exercise-number">16</div>
+                <div class="exercise-name">Жим гантелей сидя<span class="difficulty-badge difficulty-medium">Среднее</span></div>
+            </div>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="exercise-body" id="ex-16">
+            <div class="exercise-inner">
+                <div class="gif-box"><img src="https://kimi-web-img.moonshot.cn/img/gymvisual.com/4518a984f38554fee2b61d87bca481d4da7704c7.gif" alt="Жим сидя"></div>
+                <div class="info-grid">
+                    <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">3</div></div>
+                    <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">10-12</div></div>
+                </div>
+                <div class="muscles-section">
+                    <div class="muscles-title">💪 Задействованные мышцы</div>
+                    <div class="muscles-list"><span class="muscle-pill primary">Передняя дельта</span><span class="muscle-pill primary">Средняя дельта</span><span class="muscle-pill">Трицепс</span><span class="muscle-pill">Верх груди</span><span class="muscle-pill">Корпус</span></div>
+                </div>
+                <div class="instructions">
+                    <div class="instructions-title">📋 Техника выполнения</div>
+                    <ol class="instructions-list"><li>Сядьте на скамью со спинкой, спина плотно прижата, гантели у плеч</li><li>На выдохе выжмите гантели вверх до полного выпрямления рук</li><li>Гантели движутся по дуге, в верхней точке они почти соприкасаются</li><li>На вдохе медленно опустите гантели до уровня плеч или чуть ниже</li><li>Локти не опускайте слишком низко — это лишняя нагрузка на плечевой сустав</li></ol>
+                </div>
+                <div class="tips-box">
+                    <div class="tips-title">💡 Ключевые моменты</div>
+                    <ul class="tips-list"><li>Не прогибайте поясницу — спина плотно к спинке</li><li>Если нет скамьи — можно делать стоя, но сидя легче держать корпус</li></ul>
+                </div>
+                <div class="sets-tracker" data-exercise="16">
+                    <div class="sets-title">✅ Отметить подходы</div>
+                    <div class="sets-row" id="sets-row-16">
+                        <label class="set-check" onclick="toggleSet(this,'16',0)"><input type="checkbox" data-set="0"><div class="set-box"></div><span class="set-label">Подход 1</span><input type="text" class="set-weight" placeholder="кг" data-weight="0" onchange="saveWeight('16',0,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'16',1)"><input type="checkbox" data-set="1"><div class="set-box"></div><span class="set-label">Подход 2</span><input type="text" class="set-weight" placeholder="кг" data-weight="1" onchange="saveWeight('16',1,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'16',2)"><input type="checkbox" data-set="2"><div class="set-box"></div><span class="set-label">Подход 3</span><input type="text" class="set-weight" placeholder="кг" data-weight="2" onchange="saveWeight('16',2,this.value)" onclick="event.stopPropagation()"></label>
+                        <button class="rest-btn-inline" onclick="startRestTimer(event,90)">⏱️ Отдых 90с</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="exercise-card">
+        <div class="exercise-header" data-exercise="17">
+            <div class="exercise-main">
+                <div class="exercise-number">17</div>
+                <div class="exercise-name">Подъём гантелей в стороны<span class="difficulty-badge difficulty-easy">Лёгкое</span></div>
+            </div>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="exercise-body" id="ex-17">
+            <div class="exercise-inner">
+                <div class="gif-box"><img src="https://kimi-web-img.moonshot.cn/img/cdn.jefit.com/15b2ebb9052a21baa294481defd88d8d3580c16b.gif" alt="Подъём в стороны"></div>
+                <div class="info-grid">
+                    <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">3</div></div>
+                    <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">15</div></div>
+                </div>
+                <div class="muscles-section">
+                    <div class="muscles-title">💪 Задействованные мышцы</div>
+                    <div class="muscles-list"><span class="muscle-pill primary">Средняя дельта</span><span class="muscle-pill">Передняя дельта</span><span class="muscle-pill">Трапеции (верх)</span></div>
+                </div>
+                <div class="instructions">
+                    <div class="instructions-title">📋 Техника выполнения</div>
+                    <ol class="instructions-list"><li>Встаньте прямо, гантели в руках, ладони к корпусу, локти слегка согнуты</li><li>На выдохе поднимайте руки в стороны до уровня плеч</li><li>Локти остаются чуть согнутыми на всём протяжении — не разгибайте</li><li>В верхней точке задержитесь на 1 секунду, напрягая среднюю дельту</li><li>На вдохе медленно опустите гантели, контролируя негативную фазу</li></ol>
+                </div>
+                <div class="tips-box">
+                    <div class="tips-title">💡 Ключевые моменты</div>
+                    <ul class="tips-list"><li>Не поднимайте выше плеч — это перенагружает трапеции</li><li>Вес должен быть умеренным — это изолирующее упражнение</li></ul>
+                </div>
+                <div class="sets-tracker" data-exercise="17">
+                    <div class="sets-title">✅ Отметить подходы</div>
+                    <div class="sets-row" id="sets-row-17">
+                        <label class="set-check" onclick="toggleSet(this,'17',0)"><input type="checkbox" data-set="0"><div class="set-box"></div><span class="set-label">Подход 1</span><input type="text" class="set-weight" placeholder="кг" data-weight="0" onchange="saveWeight('17',0,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'17',1)"><input type="checkbox" data-set="1"><div class="set-box"></div><span class="set-label">Подход 2</span><input type="text" class="set-weight" placeholder="кг" data-weight="1" onchange="saveWeight('17',1,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'17',2)"><input type="checkbox" data-set="2"><div class="set-box"></div><span class="set-label">Подход 3</span><input type="text" class="set-weight" placeholder="кг" data-weight="2" onchange="saveWeight('17',2,this.value)" onclick="event.stopPropagation()"></label>
+                        <button class="rest-btn-inline" onclick="startRestTimer(event,90)">⏱️ Отдых 90с</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="exercise-card">
+        <div class="exercise-header" data-exercise="18">
+            <div class="exercise-main">
+                <div class="exercise-number">18</div>
+                <div class="exercise-name">Наклоны головы с отягощением<span class="difficulty-badge difficulty-easy">Лёгкое</span></div>
+            </div>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="exercise-body" id="ex-18">
+            <div class="exercise-inner">
+                <div class="gif-box"><img src="https://kimi-web-img.moonshot.cn/img/gymvisual.com/2cde4de7fab17efdc75245f52814bd1eb977a42a.gif" alt="Наклоны головы"></div>
+                <div class="info-grid">
+                    <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">3</div></div>
+                    <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">15</div></div>
+                </div>
+                <div class="muscles-section">
+                    <div class="muscles-title">💪 Задействованные мышцы</div>
+                    <div class="muscles-list"><span class="muscle-pill primary">Грудино-ключично-сосцевидная</span><span class="muscle-pill primary">Передние мышцы шеи</span><span class="muscle-pill">Лестничная мышца</span><span class="muscle-pill">Трапеции (верх)</span></div>
+                </div>
+                <div class="instructions">
+                    <div class="instructions-title">📋 Техника выполнения</div>
+                    <ol class="instructions-list"><li>Сядьте прямо, полотенце или мягкая накладка на голове для комфорта</li><li>Положите ладонь (или небольшой диск) на лоб как отягощение</li><li>На выдохе медленно наклоните голову вперёд, подбородок к груди</li><li>Задержитесь на 1-2 секунды, чувствуя напряжение передних мышц шеи</li><li>На вдохе плавно верните голову в исходное положение</li></ol>
+                </div>
+                <div class="tips-box">
+                    <div class="tips-title">💡 Ключевые моменты</div>
+                    <ul class="tips-list"><li>Движения должны быть плавными — шея очень уязвима к травмам</li><li>Начинайте без веса, добавляйте постепенно</li></ul>
+                </div>
+                <div class="sets-tracker" data-exercise="18">
+                    <div class="sets-title">✅ Отметить подходы</div>
+                    <div class="sets-row" id="sets-row-18">
+                        <label class="set-check" onclick="toggleSet(this,'18',0)"><input type="checkbox" data-set="0"><div class="set-box"></div><span class="set-label">Подход 1</span><input type="text" class="set-weight" placeholder="кг" data-weight="0" onchange="saveWeight('18',0,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'18',1)"><input type="checkbox" data-set="1"><div class="set-box"></div><span class="set-label">Подход 2</span><input type="text" class="set-weight" placeholder="кг" data-weight="1" onchange="saveWeight('18',1,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'18',2)"><input type="checkbox" data-set="2"><div class="set-box"></div><span class="set-label">Подход 3</span><input type="text" class="set-weight" placeholder="кг" data-weight="2" onchange="saveWeight('18',2,this.value)" onclick="event.stopPropagation()"></label>
+                        <button class="rest-btn-inline" onclick="startRestTimer(event,90)">⏱️ Отдых 90с</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="exercise-card">
+        <div class="exercise-header" data-exercise="19">
+            <div class="exercise-main">
+                <div class="exercise-number">19</div>
+                <div class="exercise-name">Подъёмы ног лёжа<span class="difficulty-badge difficulty-medium">Среднее</span></div>
+            </div>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="exercise-body" id="ex-19">
+            <div class="exercise-inner">
+                <div class="gif-box"><img src="https://kimi-web-img.moonshot.cn/img/i.makeagif.com/12d234aa4c1030336bc4cf357f9fc9776370eb71.gif" alt="Подъёмы ног"></div>
+                <div class="info-grid">
+                    <div class="info-box"><div class="info-label">Подходы</div><div class="info-value">3</div></div>
+                    <div class="info-box"><div class="info-label">Повторения</div><div class="info-value">15</div></div>
+                </div>
+                <div class="muscles-section">
+                    <div class="muscles-title">💪 Задействованные мышцы</div>
+                    <div class="muscles-list"><span class="muscle-pill primary">Прямая мышца живота (низ)</span><span class="muscle-pill">Подвздошно-поясничная</span><span class="muscle-pill">Косые мышцы</span><span class="muscle-pill">Бёдра</span></div>
+                </div>
+                <div class="instructions">
+                    <div class="instructions-title">📋 Техника выполнения</div>
+                    <ol class="instructions-list"><li>Лягте на спину, руки вдоль тела или под ягодицы для поддержки поясницы</li><li>Ноги прямые или слегка согнуты в коленях, поднимите их на 15-20 см от пола</li><li>На выдохе поднимайте ноги вверх до угла ~90° с полом или чуть выше</li><li>В верхней точке задержитесь и подтяните таз вверх (обратное скручивание)</li><li>На вдохе медленно опустите ноги, но не кладите их на пол — поддерживайте напряжение</li></ol>
+                </div>
+                <div class="tips-box">
+                    <div class="tips-title">💡 Ключевые моменты</div>
+                    <ul class="tips-list"><li>Если поясница отрывается от пола — согните ноги или подложите руки под ягодицы</li><li>Не используйте инерцию — контролируйте движение ногами</li></ul>
+                </div>
+                <div class="sets-tracker" data-exercise="19">
+                    <div class="sets-title">✅ Отметить подходы</div>
+                    <div class="sets-row" id="sets-row-19">
+                        <label class="set-check" onclick="toggleSet(this,'19',0)"><input type="checkbox" data-set="0"><div class="set-box"></div><span class="set-label">Подход 1</span><input type="text" class="set-weight" placeholder="кг" data-weight="0" onchange="saveWeight('19',0,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'19',1)"><input type="checkbox" data-set="1"><div class="set-box"></div><span class="set-label">Подход 2</span><input type="text" class="set-weight" placeholder="кг" data-weight="1" onchange="saveWeight('19',1,this.value)" onclick="event.stopPropagation()"></label>
+                        <label class="set-check" onclick="toggleSet(this,'19',2)"><input type="checkbox" data-set="2"><div class="set-box"></div><span class="set-label">Подход 3</span><input type="text" class="set-weight" placeholder="кг" data-weight="2" onchange="saveWeight('19',2,this.value)" onclick="event.stopPropagation()"></label>
+                        <button class="rest-btn-inline" onclick="startRestTimer(event,90)">⏱️ Отдых 90с</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="day-tips">
+        <div class="tips-title">💡 Советы дня В</div>
+        <ul class="tips-list">
+            <li>Ноги — самая большая мышечная группа, не бойтесь брать рабочий вес</li>
+            <li>Гоблет-приседания — отличная альтернатива штанге для подростков</li>
+            <li>Плечи любят объём — жим + в стороны дают полноценную нагрузку</li>
+            <li>Шея — малая мышечная группа, работайте с лёгким весом и идеальной техникой</li>
+        </ul>
+    </div>
+</div>
+
+    <div class="rest-day">
+        <span class="emoji">😴</span>
+        <h3>Дни отдыха</h3>
+        <p>Вт, Чт, Сб, Вс — восстановление, растяжка, лёгкая активность (ходьба, плавание)</p>
+    </div>
+
+    <div class="rest-timer-float" id="rest-timer">
+        <div>
+            <div class="rest-label">Отдых</div>
+            <div class="rest-display" id="rest-display">90</div>
+        </div>
+        <div class="rest-controls">
+            <button class="rest-btn" onclick="addRestTime(-10)">−</button>
+            <button class="rest-btn" onclick="addRestTime(10)">+</button>
+            <button class="rest-btn" onclick="resetRestTimer()" style="font-size:0.8rem;">↺</button>
+        </div>
+        <button class="rest-close" onclick="hideRestTimer()">✕</button>
+    </div>
+
+    <div class="calendar-section" id="calendar-section">
+        <div class="calendar-header">
+            <div class="calendar-title" id="cal-month-title">📅 Календарь тренировок</div>
+            <div class="calendar-nav">
+                <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
+                <button class="cal-nav-btn" onclick="changeMonth(1)">›</button>
+            </div>
+        </div>
+        <div class="calendar-grid" id="cal-grid">
+            <div class="cal-day-header">Пн</div><div class="cal-day-header">Вт</div><div class="cal-day-header">Ср</div>
+            <div class="cal-day-header">Чт</div><div class="cal-day-header">Пт</div><div class="cal-day-header">Сб</div><div class="cal-day-header">Вс</div>
+        </div>
+    </div>
+
+    <div class="stats-section" id="stats-section">
+        <div class="calendar-title">📊 Статистика</div>
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-value" id="stat-total">0</div><div class="stat-label">Всего тренировок</div></div>
+            <div class="stat-card"><div class="stat-value" id="stat-streak">0</div><div class="stat-label">Дней подряд</div></div>
+            <div class="stat-card"><div class="stat-value" id="stat-sets">0</div><div class="stat-label">Подходов выполнено</div></div>
+            <div class="stat-card"><div class="stat-value" id="stat-time">0ч</div><div class="stat-label">Время тренировок</div></div>
+        </div>
+        <div style="text-align:center;"><button class="reset-btn" onclick="resetAllData()">🗑️ Сбросить все данные</button></div>
+    </div>
+
+    <div class="footer">
+        🏋️ Сбалансированный план тренировок | 3 дня в неделю | Для подростков 17+<br>
+        Нажмите на упражнение, чтобы увидеть технику выполнения
+    </div>
+
+    <script>
+    let workoutStartTime = null, workoutTimerInterval = null, restTimerInterval = null;
+    let restTimeLeft = 90, currentRestDuration = 90, isWorkoutRunning = false;
+    let currentMonth = new Date(), selectedDate = null;
+    const STORAGE_KEY = 'workout_plan_data_v3';
+
+    function getData() {
+        try { const raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : { workouts: {}, sets: {}, weights: {}, totalTime: 0 }; }
+        catch(e) { return { workouts: {}, sets: {}, weights: {}, totalTime: 0 }; }
+    }
+    function saveData(data) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+
+    document.getElementById('tab-A').addEventListener('click', function() { showDay('A'); });
+    document.getElementById('tab-B').addEventListener('click', function() { showDay('B'); });
+    document.getElementById('tab-V').addEventListener('click', function() { showDay('V'); });
+
+    function showDay(day) {
+        document.querySelectorAll('.day-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+        document.getElementById('day-' + day).classList.add('active');
+        document.getElementById('tab-' + day).classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    document.querySelectorAll('.exercise-header').forEach(function(header) {
+        header.addEventListener('click', function(e) { e.stopPropagation(); toggleExercise(this); });
+    });
+
+    function toggleExercise(header) {
+        var exId = header.getAttribute('data-exercise');
+        var body = document.getElementById('ex-' + exId);
+        var icon = header.querySelector('.toggle-icon');
+        if (body.classList.contains('open')) { body.classList.remove('open'); icon.classList.remove('open'); }
+        else { body.classList.add('open'); icon.classList.add('open'); }
+    }
+
+    function toggleWorkoutTimer() {
+        const btn = document.getElementById('timer-toggle');
+        if (!isWorkoutRunning) {
+            isWorkoutRunning = true; workoutStartTime = Date.now();
+            btn.textContent = '⏹ Закончить'; btn.classList.add('stop');
+            workoutTimerInterval = setInterval(updateWorkoutTimer, 1000);
+        } else { stopWorkoutTimer(); }
+    }
+    function updateWorkoutTimer() {
+        if (!workoutStartTime) return;
+        const elapsed = Math.floor((Date.now() - workoutStartTime) / 1000);
+        document.getElementById('main-timer').textContent = formatTime(elapsed);
+    }
+    function stopWorkoutTimer() {
+        if (!isWorkoutRunning) return;
+        isWorkoutRunning = false; clearInterval(workoutTimerInterval);
+        const btn = document.getElementById('timer-toggle');
+        btn.textContent = '▶ Начать'; btn.classList.remove('stop');
+        if (workoutStartTime) {
+            const elapsed = Math.floor((Date.now() - workoutStartTime) / 1000);
+            const data = getData(); data.totalTime = (data.totalTime || 0) + elapsed;
+            saveData(data); workoutStartTime = null; updateStats();
+        }
+    }
+    function formatTime(seconds) {
+        const h = Math.floor(seconds / 3600), m = Math.floor((seconds % 3600) / 60), s = seconds % 60;
+        return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+    }
+
+    function toggleSet(el, exId, setIndex) {
+        el.classList.toggle('checked');
+        const checkbox = el.querySelector('input[type="checkbox"]');
+        checkbox.checked = el.classList.contains('checked');
+        const data = getData(); if (!data.sets) data.sets = {};
+        data.sets[exId + '-' + setIndex] = checkbox.checked;
+        saveData(data); updateProgress(); updateStats();
+    }
+    function saveWeight(exId, setIndex, value) {
+        const data = getData(); if (!data.weights) data.weights = {};
+        data.weights[exId + '-' + setIndex] = value; saveData(data);
+    }
+    function loadSets() {
+        const data = getData(); if (!data.sets) return;
+        for (let exId = 1; exId <= 19; exId++) {
+            const row = document.getElementById('sets-row-' + exId);
+            if (!row) continue;
+            row.querySelectorAll('.set-check').forEach((el, i) => {
+                if (data.sets[exId + '-' + i]) { el.classList.add('checked'); el.querySelector('input[type="checkbox"]').checked = true; }
+            });
+            row.querySelectorAll('.set-weight').forEach((el, i) => {
+                if (data.weights && data.weights[exId + '-' + i]) el.value = data.weights[exId + '-' + i];
+            });
+        }
+        updateProgress();
+    }
+    function updateProgress() {
+        const total = document.querySelectorAll('.set-check').length;
+        const checked = document.querySelectorAll('.set-check.checked').length;
+        const pct = total > 0 ? Math.round((checked / total) * 100) : 0;
+        document.getElementById('progress-fill').style.width = pct + '%';
+        document.getElementById('progress-text').textContent = pct + '%';
+    }
+
+    function startRestTimer(e, seconds) {
+        if (e) e.stopPropagation();
+        restTimeLeft = seconds; currentRestDuration = seconds;
+        document.getElementById('rest-display').textContent = restTimeLeft;
+        document.getElementById('rest-timer').classList.add('active');
+        clearInterval(restTimerInterval);
+        restTimerInterval = setInterval(() => {
+            restTimeLeft--; document.getElementById('rest-display').textContent = restTimeLeft;
+            if (restTimeLeft <= 0) { clearInterval(restTimerInterval); document.getElementById('rest-display').textContent = '✓'; if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]); }
+        }, 1000);
+    }
+    function addRestTime(seconds) { restTimeLeft = Math.max(5, restTimeLeft + seconds); document.getElementById('rest-display').textContent = restTimeLeft; }
+    function resetRestTimer() { restTimeLeft = currentRestDuration; document.getElementById('rest-display').textContent = restTimeLeft; clearInterval(restTimerInterval); startRestTimer(null, currentRestDuration); }
+    function hideRestTimer() { document.getElementById('rest-timer').classList.remove('active'); clearInterval(restTimerInterval); }
+
+    function changeMonth(delta) { currentMonth.setMonth(currentMonth.getMonth() + delta); renderCalendar(); }
+    function renderCalendar() {
+        const grid = document.getElementById('cal-grid');
+        const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+        document.getElementById('cal-month-title').textContent = '📅 ' + monthNames[currentMonth.getMonth()] + ' ' + currentMonth.getFullYear();
+        let calHtml = '<div class="cal-day-header">Пн</div><div class="cal-day-header">Вт</div><div class="cal-day-header">Ср</div><div class="cal-day-header">Чт</div><div class="cal-day-header">Пт</div><div class="cal-day-header">Сб</div><div class="cal-day-header">Вс</div>';
+        const year = currentMonth.getFullYear(), month = currentMonth.getMonth();
+        const firstDay = new Date(year, month, 1), lastDay = new Date(year, month + 1, 0);
+        const startOffset = (firstDay.getDay() + 6) % 7;
+        const today = new Date(), isCurrentMonth = today.getMonth() === month && today.getFullYear() === year, todayDate = today.getDate();
+        const data = getData();
+        const prevLastDay = new Date(year, month, 0).getDate();
+        for (let i = startOffset - 1; i >= 0; i--) calHtml += `<div class="cal-day other-month">${prevLastDay - i}</div>`;
+        for (let d = 1; d <= lastDay.getDate(); d++) {
+            const dateKey = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const workout = data.workouts ? data.workouts[dateKey] : null;
+            let cls = 'cal-day', label = '';
+            if (isCurrentMonth && d === todayDate) cls += ' today';
+            if (workout) { cls += ' has-workout'; if (workout === 'rest') { cls += ' rest-day'; label = '<div class="workout-type">Отдых</div>'; } else label = `<div class="workout-type">День ${workout}</div>`; }
+            calHtml += `<div class="${cls}" onclick="openDayModal('${dateKey}', ${d})">${d}${label}</div>`;
+        }
+        const totalCells = startOffset + lastDay.getDate(), remaining = 7 - (totalCells % 7);
+        if (remaining < 7) for (let d = 1; d <= remaining; d++) calHtml += `<div class="cal-day other-month">${d}</div>`;
+        grid.innerHTML = calHtml;
+    }
+    function openDayModal(dateKey, dayNum) {
+        selectedDate = dateKey; const data = getData();
+        const current = data.workouts && data.workouts[dateKey] ? data.workouts[dateKey] : null;
+        let modalHtml = `<div class="day-modal-overlay active" id="day-modal-overlay" onclick="if(event.target===this)closeDayModal()">
+            <div class="day-modal">
+                <h3>📅 ${dayNum} ${document.getElementById('cal-month-title').textContent.replace('📅 ','')}</h3>
+                <div class="workout-options">
+                    <div class="workout-option ${current==='A'?'selected':''}" onclick="selectWorkout('A')"><div class="opt-icon opt-a">А</div><span>День А — Спина + Бицепс</span></div>
+                    <div class="workout-option ${current==='B'?'selected':''}" onclick="selectWorkout('B')"><div class="opt-icon opt-b">Б</div><span>День Б — Грудь + Трицепс</span></div>
+                    <div class="workout-option ${current==='V'?'selected':''}" onclick="selectWorkout('V')"><div class="opt-icon opt-v">В</div><span>День В — Ноги + Плечи</span></div>
+                    <div class="workout-option ${current==='rest'?'selected':''}" onclick="selectWorkout('rest')"><div class="opt-icon opt-rest">😴</div><span>День отдыха</span></div>
+                </div>
+                ${current ? '<button class="delete-workout" onclick="deleteWorkout()">🗑️ Удалить отметку</button>' : ''}
+                <button class="modal-close" onclick="closeDayModal()">Закрыть</button>
+            </div>
+        </div>`;
+        const existing = document.getElementById('day-modal-overlay'); if (existing) existing.remove();
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+    }
+    function closeDayModal() { const modal = document.getElementById('day-modal-overlay'); if (modal) modal.remove(); selectedDate = null; }
+    function selectWorkout(type) { if (!selectedDate) return; const data = getData(); if (!data.workouts) data.workouts = {}; data.workouts[selectedDate] = type; saveData(data); renderCalendar(); updateStats(); closeDayModal(); }
+    function deleteWorkout() { if (!selectedDate) return; const data = getData(); if (data.workouts) delete data.workouts[selectedDate]; saveData(data); renderCalendar(); updateStats(); closeDayModal(); }
+
+    function updateStats() {
+        const data = getData(), workouts = data.workouts || {};
+        const totalWorkouts = Object.values(workouts).filter(v => v !== 'rest').length;
+        const totalSets = Object.values(data.sets || {}).filter(v => v).length;
+        const totalHours = Math.round(((data.totalTime || 0) / 3600) * 10) / 10;
+        const dates = Object.keys(workouts).filter(k => workouts[k] !== 'rest').sort();
+        let streak = 0;
+        if (dates.length > 0) {
+            const today = new Date(), todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+            let checkDate = new Date(today); if (!workouts[todayKey]) checkDate.setDate(checkDate.getDate() - 1);
+            for (let i = 0; i < 365; i++) {
+                const key = `${checkDate.getFullYear()}-${String(checkDate.getMonth()+1).padStart(2,'0')}-${String(checkDate.getDate()).padStart(2,'0')}`;
+                if (workouts[key] && workouts[key] !== 'rest') { streak++; checkDate.setDate(checkDate.getDate() - 1); } else break;
+            }
+        }
+        document.getElementById('stat-total').textContent = totalWorkouts;
+        document.getElementById('stat-streak').textContent = streak;
+        document.getElementById('stat-sets').textContent = totalSets;
+        document.getElementById('stat-time').textContent = totalHours + 'ч';
+    }
+    function resetAllData() { if (confirm('Точно сбросить ВСЕ данные? Это необратимо!')) { localStorage.removeItem(STORAGE_KEY); location.reload(); } }
+
+    document.addEventListener('DOMContentLoaded', function() { loadSets(); renderCalendar(); updateStats(); });
+    </script>
+</body>
+</html>
